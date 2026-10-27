@@ -1,0 +1,7 @@
+.DS_Store
+.artifacts/
+dist/
+*.xcuserstate
+xcuserdata/
+iOS/Signing.local.xcconfig
+iOS/Resources/KeepAwake.mp4
