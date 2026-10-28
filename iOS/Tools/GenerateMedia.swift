@@ -24,9 +24,9 @@ struct GenerateMedia {
             guard let pool = adaptor.pixelBufferPool, CVPixelBufferPoolCreatePixelBuffer(nil, pool, &pixel) == kCVReturnSuccess, let pixel else { throw NSError(domain: "Media", code: 3) }
             CVPixelBufferLockBaseAddress(pixel, [])
             let context = CGContext(data: CVPixelBufferGetBaseAddress(pixel), width: 320, height: 180, bitsPerComponent: 8, bytesPerRow: CVPixelBufferGetBytesPerRow(pixel), space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.noneSkipFirst.rawValue)!
-            context.setFillColor(CGColor(red: 0.055, green: 0.075, blue: 0.10, alpha: 1))
+            context.setFillColor(CGColor(red: 0.10, green: 0.065, blue: 0.04, alpha: 1))
             context.fill(CGRect(x: 0, y: 0, width: 320, height: 180))
-            context.setFillColor(CGColor(red: 0.25, green: 0.85, blue: 0.60, alpha: 0.7 + 0.3 * sin(Double(frame) * .pi / 15)))
+            context.setFillColor(CGColor(red: 1, green: 0.50, blue: 0.04, alpha: 0.7 + 0.3 * sin(Double(frame) * .pi / 15)))
             context.move(to: CGPoint(x: 169, y: 142)); context.addLine(to: CGPoint(x: 141, y: 101)); context.addLine(to: CGPoint(x: 159, y: 101)); context.addLine(to: CGPoint(x: 150, y: 74)); context.addLine(to: CGPoint(x: 181, y: 115)); context.addLine(to: CGPoint(x: 162, y: 115)); context.closePath(); context.fillPath()
             let text = NSAttributedString(string: "CHARGEUNLOCK", attributes: [NSAttributedString.Key(kCTFontAttributeName as String): CTFontCreateWithName("HelveticaNeue-Medium" as CFString, 17, nil), NSAttributedString.Key(kCTForegroundColorAttributeName as String): CGColor(gray: 0.92, alpha: 1)])
             let line = CTLineCreateWithAttributedString(text)

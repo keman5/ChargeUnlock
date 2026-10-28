@@ -44,7 +44,7 @@ case "$MODE" in
   "$CACHE/iOS/GenerateMedia" "$ROOT/iOS/Resources/KeepAwake.mp4"
   DESTINATION="generic/platform=iOS"
   if [[ "$MODE" == ios-install ]]; then DESTINATION="id=$DEVICE"; fi
-  run_child xcrun xcodebuild -project "$ROOT/iOS/ChargeUnlock.xcodeproj" -scheme ChargeUnlock -configuration Debug -destination "$DESTINATION" -destination-timeout 20 -derivedDataPath "$CACHE/iOS" -allowProvisioningUpdates -allowProvisioningDeviceRegistration build
+  run_child xcrun xcodebuild -project "$ROOT/iOS/ChargeUnlock.xcodeproj" -scheme ChargeUnlock -configuration Debug -destination "$DESTINATION" -destination-timeout 20 -derivedDataPath "$CACHE/iOS" "SYMROOT=$CACHE/iOS/Build/Products" "OBJROOT=$CACHE/iOS/Build/Intermediates.noindex" -allowProvisioningUpdates -allowProvisioningDeviceRegistration build
   APP="$CACHE/iOS/Build/Products/Debug-iphoneos/ChargeUnlock.app"
   codesign --verify --deep --strict "$APP"
   if [[ "$MODE" == ios-install ]]; then

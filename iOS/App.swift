@@ -17,6 +17,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         guard let scene = scene as? UIWindowScene else { return }
         let window = UIWindow(windowScene: scene)
+        window.tintColor = UIColor(named: "AccentColor")
         window.rootViewController = MainViewController()
         window.makeKeyAndVisible()
         self.window = window
@@ -81,6 +82,7 @@ final class MainViewController: UIViewController {
         status.accessibilityIdentifier = "playbackStatus"
         stack.addArrangedSubview(status)
         start.configuration = .filled()
+        start.configuration?.baseForegroundColor = UIColor { $0.userInterfaceStyle == .dark ? .black : .white }
         start.configuration?.title = "开启画中画"
         start.configuration?.image = UIImage(systemName: "pip.enter")
         start.configuration?.imagePadding = 8

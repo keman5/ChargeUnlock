@@ -1,0 +1,5 @@
+# Orange ChargeUnlock variant
+
+Tool: built-in image_gen. Source: a-charge-unlock.png. Output: a-charge-unlock-orange.png.
+
+Edit the supplied ChargeUnlock icon. Change ONLY the color palette from blue to warm vivid orange: replace the cobalt blue full-bleed background with a saturated tangerine-orange background, retaining the original subtle tonal gradient; change the blue lightning-shaped cutout interior to rich warm orange with amber highlights, and convert blue reflected edge light to subtle warm orange reflected light. Keep the lock body and open shackle porcelain white. Preserve the exact original open-padlock silhouette, lightning cutout shape, dimensions, positioning, generous inset, bevels, material, shadows, lighting direction and square composition. White lock must remain clearly separated from the orange background, no yellow cast over the whole white body. A polished restrained iOS app icon. No text, no new objects, no rounded outer mask, no border. This is a precise recolor of the supplied artwork, not a redesign.

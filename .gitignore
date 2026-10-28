@@ -3,5 +3,6 @@
 dist/
 *.xcuserstate
 xcuserdata/
+iOS/Build/*
 iOS/Signing.local.xcconfig
 iOS/Resources/KeepAwake.mp4

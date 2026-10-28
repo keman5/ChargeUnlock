@@ -21,6 +21,7 @@ struct StopChargingIntent: AudioPlaybackIntent {
 }
 
 struct ChargingShortcuts: AppShortcutsProvider {
+    static let shortcutTileColor: ShortcutTileColor = .orange
     static var appShortcuts: [AppShortcut] {
         AppShortcut(intent: StartChargingIntent(), phrases: ["用\(.applicationName)开始充电保活"], shortTitle: "开始充电保活", systemImageName: "bolt.fill")
         AppShortcut(intent: StopChargingIntent(), phrases: ["用\(.applicationName)停止充电保活"], shortTitle: "停止充电保活", systemImageName: "stop.circle")
