@@ -182,7 +182,20 @@ final class PlaybackController: NSObject, @preconcurrency AVPictureInPictureCont
     func pictureInPictureControllerDidStartPictureInPicture(_ controller: AVPictureInPictureController) {
         attempt = false
         guard powered, policy.requested else { stop(); return }
-        status("画中画已开启，可切换到其他 App。")
+        status("画中画已开启，正在返回桌面。")
+        // This developer-installed app uses a private API; iOS has no public Home Screen action.
+        // Defer until the PiP delegate callback completes, and recheck for a stop or unplug.
+        DispatchQueue.main.async { [weak self] in
+            guard let self, self.powered, self.policy.requested, self.active,
+                  UIApplication.shared.applicationState == .active else { return }
+            let application = UIApplication.shared
+            let suspend = NSSelectorFromString("suspend")
+            guard application.responds(to: suspend) else {
+                self.status("画中画已开启，请上滑返回桌面。")
+                return
+            }
+            application.perform(suspend)
+        }
     }
     func pictureInPictureController(_ controller: AVPictureInPictureController, failedToStartPictureInPictureWithError error: Error) {
         attempt = false

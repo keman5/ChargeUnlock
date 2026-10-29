@@ -4,13 +4,17 @@ Mac 菜单栏开发工具：指定 iPhone 通过 USB 连接时，用独立的 XC
 
 ## iPhone 独立版（画中画）
 
-另提供原生 iOS App，支持 iOS 17 及以上，使用系统画中画循环播放本地无声视频。无需 Mac 持续连接；是否阻止自动锁屏取决于系统的实际播放行为，不能等同于修改全局锁屏设置。
+另提供原生 iOS App，支持 iOS 17 及以上，使用系统画中画循环播放本地无声视频。日常使用只需 ChargeUnlock 和 iOS“快捷指令”的充电器自动化，不依赖 ChargeUnlockRunner，也无需 Mac 持续连接。手机上原有的 ChargeUnlockRunner-Runner 可以卸载；使用此模式时请退出 Mac 保活工具。是否阻止自动锁屏取决于系统的实际播放行为，不能等同于修改全局锁屏设置。
 
 ```sh
 ./build.sh ios-install DEVICE_UDID TEAM_ID
 ```
 
 此命令运行自检、生成并校验 6 秒低码率本地视频、对指定真机构建签名、安装并启动。仅构建用 `ios` 模式；签名团队存于忽略的 `iOS/Signing.local.xcconfig`，构建缓存位于 `~/Library/Caches/ChargeUnlock/iOS/`。
+
+画中画启动成功后自动返回桌面，手动开启和快捷指令启动均生效；启动失败时留在 App 内。此行为使用 iOS 私有退后台接口，仅用于本机开发安装，不适用于 App Store 上架；系统不支持该接口时需手动上滑返回桌面。重新打开 App 不会再次自动退出。
+
+开发者可选的 `./build.sh ios-test DEVICE_UDID TEAM_ID` 会临时安装并运行 ChargeUnlockRunner，连续检查两次画中画启动、自动返回桌面、重新进入及停止流程；手机需解锁并连接电源。它不属于 iOS 日常使用流程，完成后可卸载测试助手。
 
 在手机“快捷指令 → 自动化”创建两条个人自动化：
 

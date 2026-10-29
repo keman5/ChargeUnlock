@@ -83,7 +83,7 @@ final class MainViewController: UIViewController {
         stack.addArrangedSubview(status)
         start.configuration = .filled()
         start.configuration?.baseForegroundColor = UIColor { $0.userInterfaceStyle == .dark ? .black : .white }
-        start.configuration?.title = "开启画中画"
+        start.configuration?.title = "开启画中画并返回桌面"
         start.configuration?.image = UIImage(systemName: "pip.enter")
         start.configuration?.imagePadding = 8
         start.configuration?.contentInsets = NSDirectionalEdgeInsets(top: 16, leading: 16, bottom: 16, trailing: 16)

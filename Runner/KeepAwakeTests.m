@@ -14,6 +14,42 @@ static void Report(NSString *state) {
 @end
 
 @implementation KeepAwakeTests
+- (void)testPictureInPictureReturnsHome {
+    self.continueAfterFailure = NO;
+    XCUIApplication *app = [[XCUIApplication alloc] initWithBundleIdentifier:@"local.chargeunlock.ios"];
+    XCUIApplication *home = [[XCUIApplication alloc] initWithBundleIdentifier:@"com.apple.springboard"];
+    [app launch];
+    @try {
+        for (NSUInteger cycle = 0; cycle < 2; cycle++) {
+            XCUIElement *start = app.buttons[@"startPiP"];
+            XCTAssertTrue([start waitForExistenceWithTimeout:10]);
+            XCTAssertTrue(start.enabled, @"Connect the iPhone to power before testing PiP");
+            [start tap];
+            // XCTest may classify the app as foreground while its PiP window is visible.
+            // Verify the actual Home Screen rather than the media owner's process state.
+            XCTAssertTrue([home waitForState:XCUIApplicationStateRunningForeground timeout:15], @"Starting PiP should automatically show the Home Screen");
+            XCUIElement *icon = home.icons.firstMatch;
+            XCTAssertTrue([icon waitForExistenceWithTimeout:5], @"Home Screen icons should be visible behind PiP");
+            XCTAttachment *screen = [XCTAttachment attachmentWithScreenshot:XCUIScreen.mainScreen.screenshot];
+            screen.name = [NSString stringWithFormat:@"PiP on Home Screen %lu", (unsigned long)cycle + 1];
+            screen.lifetime = XCTAttachmentLifetimeKeepAlways;
+            [self addAttachment:screen];
+            [app activate];
+            XCTAssertTrue([app waitForState:XCUIApplicationStateRunningForeground timeout:5], @"Returning to the app must not send it Home again");
+            XCUIElement *stop = app.buttons[@"停止保活"];
+            XCTAssertTrue([stop waitForExistenceWithTimeout:5]);
+            [stop tap];
+            NSPredicate *closed = [NSPredicate predicateWithFormat:@"enabled == NO"];
+            XCTNSPredicateExpectation *stopped = [[XCTNSPredicateExpectation alloc] initWithPredicate:closed object:stop];
+            XCTAssertEqual([XCTWaiter waitForExpectations:@[stopped] timeout:10], XCTWaiterResultCompleted);
+        }
+    } @finally {
+        [app activate];
+        XCUIElement *stop = app.buttons[@"停止保活"];
+        if (stop.exists && stop.enabled) [stop tap];
+    }
+}
+
 - (void)testKeepAwake {
     self.continueAfterFailure = NO;
     NSString *session = NSProcessInfo.processInfo.environment[@"CHARGEUNLOCK_SESSION"];

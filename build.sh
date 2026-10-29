@@ -95,13 +95,18 @@ PLIST
     echo 'Installed /Applications/ChargeUnlock.app (preferences preserved)'
   fi
   ;;
- runner|run)
+ runner|run|ios-test)
   DEVICE="${2:?device UDID required}"
   TEAM="${3:?Apple development team required}"
   [[ "$DEVICE" =~ ^[A-Fa-f0-9-]{24,40}$ && "$TEAM" =~ ^[A-Z0-9]{10}$ ]] || { echo 'Invalid device or team'; exit 2; }
   clear_caches
   BUILD="$CACHE/Runner"
-  run_child xcrun xcodebuild -project "$ROOT/Runner/ChargeUnlockRunner.xcodeproj" -scheme ChargeUnlockRunner -configuration Debug -destination "id=$DEVICE" -destination-timeout 20 -derivedDataPath "$BUILD" -allowProvisioningUpdates -allowProvisioningDeviceRegistration "DEVELOPMENT_TEAM=$TEAM" "PRODUCT_BUNDLE_IDENTIFIER=local.chargeunlock.runner.$TEAM" build-for-testing
+  run_child xcrun xcodebuild -project "$ROOT/Runner/ChargeUnlockRunner.xcodeproj" -scheme ChargeUnlockRunner -configuration Debug -destination "id=$DEVICE" -destination-timeout 20 -derivedDataPath "$BUILD" "SYMROOT=$BUILD/Build/Products" "OBJROOT=$BUILD/Build/Intermediates.noindex" -allowProvisioningUpdates -allowProvisioningDeviceRegistration "DEVELOPMENT_TEAM=$TEAM" "PRODUCT_BUNDLE_IDENTIFIER=local.chargeunlock.runner.$TEAM" build-for-testing
+  if [[ "$MODE" == ios-test ]]; then
+    ORIGINAL="$(find "$BUILD/Build/Products" -maxdepth 1 -name '*.xctestrun' ! -name 'ChargeUnlock-session.xctestrun' -print -quit)"
+    [[ -n "$ORIGINAL" ]] || { echo 'Missing test configuration'; exit 1; }
+    run_child xcrun xcodebuild test-without-building -xctestrun "$ORIGINAL" -destination "id=$DEVICE" -destination-timeout 20 -only-testing:ChargeUnlockRunner/KeepAwakeTests/testPictureInPictureReturnsHome -parallel-testing-enabled NO
+  fi
   if [[ "$MODE" == run ]]; then
     SESSION="${4:?session UUID required}"
     [[ "$SESSION" =~ ^[A-Fa-f0-9-]{36}$ ]] || exit 2
@@ -114,10 +119,10 @@ PLIST
     rm -rf "$BUILD/Logs/Test"
     kill "$AWAKE_PID" 2>/dev/null || true
     AWAKE_PID=""
-    run_child xcrun xcodebuild test-without-building -xctestrun "$RUN" -destination "id=$DEVICE" -destination-timeout 20 -test-timeouts-enabled NO -disableAutomaticPackageResolution -maximum-concurrent-test-device-destinations 1
+    run_child xcrun xcodebuild test-without-building -xctestrun "$RUN" -destination "id=$DEVICE" -destination-timeout 20 -only-testing:ChargeUnlockRunner/KeepAwakeTests/testKeepAwake -test-timeouts-enabled NO -disableAutomaticPackageResolution -maximum-concurrent-test-device-destinations 1
     rm -f "$RUN"
     rm -rf "$BUILD/Logs/Test"
   fi
   ;;
- *) echo 'Usage: ./build.sh [install|mac|test|ios DEVICE TEAM|ios-install DEVICE TEAM|runner DEVICE TEAM|run DEVICE TEAM SESSION]' >&2; exit 2 ;;
+ *) echo 'Usage: ./build.sh [install|mac|test|ios DEVICE TEAM|ios-install DEVICE TEAM|ios-test DEVICE TEAM|runner DEVICE TEAM|run DEVICE TEAM SESSION]' >&2; exit 2 ;;
 esac
