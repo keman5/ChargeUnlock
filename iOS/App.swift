@@ -27,9 +27,9 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         for context in contexts { handle(context.url) }
     }
     private func handle(_ url: URL) {
-        guard url.scheme == "chargeunlock", ["start", "stop"].contains(url.host ?? "") else { return }
+        guard ["chargeunlock", "pluglit"].contains(url.scheme ?? ""), ["start", "stop"].contains(url.host ?? "") else { return }
         if url.host == "stop" { PlaybackController.shared.stop() }
-        else { try? PlaybackController.shared.start() }
+        else { Task { try? await PlaybackController.shared.start() } }
     }
 }
 
@@ -37,10 +37,12 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 final class MainViewController: UIViewController {
     private let controller = PlaybackController.shared
     private let preview = UIView()
+    private let cardContent = UIStackView()
+    private let cardTitle = UILabel()
+    private let cardDetail = UILabel()
     private let status = UILabel()
     private let power = UILabel()
-    private let start = UIButton(type: .system)
-    private let stop = UIButton(type: .system)
+    private let toggle = UIButton(type: .system)
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -65,55 +67,122 @@ final class MainViewController: UIViewController {
             stack.widthAnchor.constraint(equalTo: scroll.frameLayoutGuide.widthAnchor, constant: -48)
         ])
         let title = UILabel()
-        title.text = "ChargeUnlock"
+        title.text = "电亮"
         title.font = .preferredFont(forTextStyle: .largeTitle)
         title.adjustsFontForContentSizeCategory = true
         stack.addArrangedSubview(title)
+        let subtitle = UILabel()
+        subtitle.text = "PlugLit · 插上电，让屏幕亮着"
+        subtitle.font = .preferredFont(forTextStyle: .subheadline)
+        subtitle.adjustsFontForContentSizeCategory = true
+        subtitle.numberOfLines = 0
+        subtitle.textColor = .secondaryLabel
+        stack.addArrangedSubview(subtitle)
         power.font = .preferredFont(forTextStyle: .headline)
+        power.adjustsFontForContentSizeCategory = true
+        power.numberOfLines = 0
         stack.addArrangedSubview(power)
         preview.backgroundColor = .secondarySystemGroupedBackground
         preview.layer.cornerRadius = 20
         preview.clipsToBounds = true
         preview.layer.addSublayer(controller.layer)
-        preview.heightAnchor.constraint(equalTo: preview.widthAnchor, multiplier: 9.0 / 16.0).isActive = true
+        preview.heightAnchor.constraint(greaterThanOrEqualToConstant: 200).isActive = true
+        cardContent.axis = .vertical
+        cardContent.alignment = .center
+        cardContent.spacing = 12
+        cardContent.translatesAutoresizingMaskIntoConstraints = false
+        let symbol = UIImageView(image: UIImage(systemName: "bolt.fill", withConfiguration: UIImage.SymbolConfiguration(pointSize: 38, weight: .semibold)))
+        symbol.contentMode = .scaleAspectFit
+        symbol.isAccessibilityElement = false
+        cardContent.addArrangedSubview(symbol)
+        cardTitle.font = .preferredFont(forTextStyle: .title2)
+        cardDetail.font = .preferredFont(forTextStyle: .subheadline)
+        cardDetail.textColor = .secondaryLabel
+        for label in [cardTitle, cardDetail] {
+            label.numberOfLines = 0
+            label.textAlignment = .center
+            label.adjustsFontForContentSizeCategory = true
+            cardContent.addArrangedSubview(label)
+        }
+        cardTitle.accessibilityIdentifier = "chargingCardTitle"
+        preview.addSubview(cardContent)
+        NSLayoutConstraint.activate([
+            cardContent.leadingAnchor.constraint(equalTo: preview.leadingAnchor, constant: 20),
+            cardContent.trailingAnchor.constraint(equalTo: preview.trailingAnchor, constant: -20),
+            cardContent.topAnchor.constraint(equalTo: preview.topAnchor, constant: 24),
+            cardContent.bottomAnchor.constraint(equalTo: preview.bottomAnchor, constant: -24)
+        ])
         stack.addArrangedSubview(preview)
         status.font = .preferredFont(forTextStyle: .body)
         status.numberOfLines = 0
+        status.adjustsFontForContentSizeCategory = true
         status.accessibilityIdentifier = "playbackStatus"
         stack.addArrangedSubview(status)
-        start.configuration = .filled()
-        start.configuration?.baseForegroundColor = UIColor { $0.userInterfaceStyle == .dark ? .black : .white }
-        start.configuration?.title = "开启画中画并返回桌面"
-        start.configuration?.image = UIImage(systemName: "pip.enter")
-        start.configuration?.imagePadding = 8
-        start.configuration?.contentInsets = NSDirectionalEdgeInsets(top: 16, leading: 16, bottom: 16, trailing: 16)
-        start.addTarget(self, action: #selector(begin), for: .touchUpInside)
-        start.accessibilityIdentifier = "startPiP"
-        stack.addArrangedSubview(start)
-        stop.configuration = .tinted()
-        stop.configuration?.title = "停止保活"
-        stop.configuration?.contentInsets = NSDirectionalEdgeInsets(top: 16, leading: 16, bottom: 16, trailing: 16)
-        stop.addTarget(self, action: #selector(end), for: .touchUpInside)
-        stack.addArrangedSubview(stop)
-        let help = UILabel()
-        help.font = .preferredFont(forTextStyle: .footnote)
-        help.textColor = .secondaryLabel
-        help.numberOfLines = 0
-        help.text = "自动化设置\n\n在快捷指令 → 自动化中创建：\n① 充电器已连接 → 立即运行 → 开始充电保活\n② 充电器已断开 → 立即运行 → 停止充电保活\n\n两个动作都在 ChargeUnlock 分类下。首次需手动配置；启动时会打开本 App。\n\n画中画大小由系统控制，可用双指缩小。断电后自动停止，不更改原来的自动锁定时间，也不会自动解锁手机。\n\n这是实验性保活方式：画中画播放、被遮到屏幕边缘或受到其他媒体打断时，实际防锁屏效果须以本机测试为准。"
-        stack.addArrangedSubview(help)
+        toggle.configuration = .filled()
+        toggle.configuration?.baseForegroundColor = UIColor { $0.userInterfaceStyle == .dark ? .black : .white }
+        toggle.configuration?.imagePadding = 8
+        toggle.configuration?.contentInsets = NSDirectionalEdgeInsets(top: 16, leading: 16, bottom: 16, trailing: 16)
+        toggle.addTarget(self, action: #selector(toggleCharging), for: .touchUpInside)
+        toggle.accessibilityIdentifier = "toggleCharging"
+        stack.addArrangedSubview(toggle)
+        stack.addArrangedSubview(instructionCard(symbol: "hand.pinch", title: "画中画太大？", body: "双指捏合即可缩放，再拖到合适角落。电亮会沿用 iOS 记住的窗口尺寸。"))
+        stack.addArrangedSubview(instructionCard(symbol: "info.circle", title: "关于亮屏与锁屏", body: "iOS 不允许应用自行调整画中画的位置和大小。保持视频播放即可维持亮屏；收起到边缘后，请确认本机是否仍亮屏。拔电或停止后，按原有设置自动锁屏。"))
+        let guide = UIButton(type: .system)
+        guide.configuration = .tinted()
+        guide.configuration?.title = "自动化设置与使用指南"
+        guide.configuration?.image = UIImage(systemName: "book.closed")
+        guide.configuration?.imagePadding = 8
+        guide.configuration?.contentInsets = NSDirectionalEdgeInsets(top: 16, leading: 12, bottom: 16, trailing: 12)
+        guide.accessibilityIdentifier = "openGuide"
+        guide.addTarget(self, action: #selector(showGuide), for: .touchUpInside)
+        stack.addArrangedSubview(guide)
         controller.onChange = { [weak self] in self?.refresh() }
         refresh()
     }
     override func viewDidLayoutSubviews() { super.viewDidLayoutSubviews(); controller.layer.frame = preview.bounds }
-    override func viewDidAppear(_ animated: Bool) { super.viewDidAppear(animated); controller.attach() }
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        controller.attach()
+        if !UserDefaults.standard.bool(forKey: "pluglitGuideSeen"), !controller.policy.requested {
+            showGuide()
+        }
+    }
     private func refresh() {
         status.text = controller.message
-        power.text = controller.powered ? "⚡ 已连接电源" : "未连接电源"
-        start.isEnabled = controller.powered
-        stop.isEnabled = controller.policy.requested || controller.active
+        power.text = "\(controller.powerText) · \(controller.batteryText)"
+        let playingInline = controller.policy.requested && !controller.active && !controller.policy.stopping && controller.player.rate > 0
+        controller.layer.isHidden = !playingInline
+        cardContent.isHidden = playingInline
+        if controller.policy.stopping {
+            cardTitle.text = "正在结束亮屏"
+            cardDetail.text = "正在关闭画中画，请稍候。"
+        } else if controller.active {
+            cardTitle.text = "充电亮屏中"
+            cardDetail.text = "\(controller.batteryText) · 可切换到其他 App\n拔掉电源后自动结束"
+        } else if controller.policy.requested {
+            cardTitle.text = "正在准备充电画面"
+            cardDetail.text = "\(controller.batteryText) · 画中画即将开启"
+        } else {
+            cardTitle.text = controller.powered ? "已就绪，随时点亮" : "等待连接电源"
+            cardDetail.text = "\(controller.batteryText) · 当前按系统设置自动锁屏\n\(controller.powered ? "点下方按钮开启充电亮屏" : "连接电源后即可开启充电亮屏")"
+        }
+        let canStop = controller.policy.requested || controller.active
+        toggle.configuration?.title = controller.policy.stopping ? "正在停止…" : canStop ? "停止充电亮屏" : "开启充电亮屏"
+        toggle.configuration?.image = UIImage(systemName: canStop ? "stop.fill" : "bolt.fill")
+        toggle.configuration?.showsActivityIndicator = controller.policy.stopping
+        toggle.isEnabled = !controller.policy.stopping && (canStop || controller.powered)
+        toggle.accessibilityValue = controller.policy.stopping ? "正在停止" : canStop ? "已开启" : "已关闭"
     }
-    @objc private func begin() {
-        do { try controller.start() } catch { status.text = error.localizedDescription }
+    @objc private func toggleCharging() {
+        guard !controller.policy.stopping else { return }
+        if controller.policy.requested || controller.active { controller.stop(); return }
+        Task {
+            do { try await controller.start() } catch { status.text = error.localizedDescription }
+        }
     }
-    @objc private func end() { controller.stop() }
+    @objc private func showGuide() {
+        guard presentedViewController == nil else { return }
+        UserDefaults.standard.set(true, forKey: "pluglitGuideSeen")
+        present(UINavigationController(rootViewController: GuideViewController()), animated: true)
+    }
 }

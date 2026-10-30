@@ -3,6 +3,13 @@ import Foundation
 @main
 struct PolicyCheck {
     static func main() {
+        assert(BatteryReading.percentageText(-1) == "电量未知")
+        assert(BatteryReading.percentageText(.nan) == "电量未知")
+        assert(BatteryReading.percentageText(.infinity) == "电量未知")
+        assert(BatteryReading.percentageText(1.1) == "电量未知")
+        assert(BatteryReading.percentageText(0) == "0%")
+        assert(BatteryReading.percentageText(0.57) == "57%")
+        assert(BatteryReading.percentageText(1) == "100%")
         var policy = ChargingPolicy()
         assert(!policy.start(powered: false))
         assert(policy.start(powered: true))
