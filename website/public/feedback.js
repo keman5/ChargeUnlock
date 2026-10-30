@@ -21,11 +21,10 @@ file?.addEventListener('change', async () => {
 });
 form?.addEventListener('submit', async event => {
   event.preventDefault();
-  const button = form.querySelector('button[type=submit]');
   const payload = {message: form.message.value.trim(), email: form.email.value.trim(), consent: form.consent.checked, diagnostics: report, website: form.website.value};
   const content = JSON.stringify(payload);
   if (!pending || pending.content !== content) pending = { content, id: crypto.randomUUID() };
-  button.disabled = true;
+  for (const control of form.elements) control.disabled = true;
   status.textContent = '正在发送…';
   status.className = 'status';
   try {
@@ -37,7 +36,7 @@ form?.addEventListener('submit', async event => {
     document.querySelector('#delete-id').value = receipt.id;
     form.reset(); report = null; pending = null; preview.textContent = '';
   } catch (error) { status.className = 'status error'; status.textContent = `${error.message}\n内容已保留，可重试。网络中断时暂无法确认是否收到。`; }
-  finally { button.disabled = false; }
+  finally { for (const control of form.elements) control.disabled = false; }
 });
 document.querySelector('#delete-form')?.addEventListener('submit', async event => {
   event.preventDefault();

@@ -54,7 +54,7 @@ final class FeedbackViewController: UIViewController {
         stack.addArrangedSubview(button("清空本地诊断日志", action: #selector(clear)))
         stack.addArrangedSubview(button("查看隐私政策", action: #selector(privacy)))
         stack.addArrangedSubview(toggleRow("同意将本次反馈发送至官网", control: consent))
-        stack.addArrangedSubview(label("仅点击提交后才发送到 auv.macseek.cc。反馈保留最多 30 天；服务器可能位于境外，网络服务商会处理连接 IP。若不愿上传，可只导出到本机。修改任何内容后重试将作为新的反馈。"))
+        stack.addArrangedSubview(label("仅点击提交后才发送到 auv.macseek.cc。反馈保留 30 天，到期后在下一次每小时清理任务中删除；服务器可能位于境外，网络服务商会处理连接 IP。若不愿上传，可只导出到本机。修改任何内容后重试将作为新的反馈。"))
         submit.configuration = .filled()
         submit.configuration?.title = "提交反馈"
         submit.addTarget(self, action: #selector(send), for: .touchUpInside)

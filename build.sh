@@ -66,6 +66,11 @@ case "$MODE" in
     xcrun simctl launch "$SIMULATOR" local.chargeunlock.ios
   fi
   ;;
+ feedback-network-check)
+  clear_caches
+  xcrun swiftc -parse-as-library "$ROOT/Tests/feedback-network.swift" -o "$CACHE/feedback-network-check"
+  "$CACHE/feedback-network-check"
+  ;;
  website|website-deploy)
   clear_caches
   "$ROOT/website/build.sh" "${MODE#website}"
@@ -73,5 +78,5 @@ case "$MODE" in
  appstore-check|appstore-archive|appstore-upload|appstore-screenshots)
   "$ROOT/release/build.sh" "$@"
   ;;
- *) echo 'Usage: ./build.sh [test|simulator|simulator-install UDID|ios DEVICE TEAM|ios-install DEVICE TEAM|website|website-deploy|appstore-check|appstore-archive|appstore-upload]' >&2; exit 2 ;;
+ *) echo 'Usage: ./build.sh [test|simulator|simulator-install UDID|ios DEVICE TEAM|ios-install DEVICE TEAM|feedback-network-check|website|website-deploy|appstore-check|appstore-archive|appstore-upload|appstore-screenshots UDID]' >&2; exit 2 ;;
 esac
