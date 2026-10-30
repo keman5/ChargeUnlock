@@ -1,0 +1,12 @@
+PlugLit is a charging Picture in Picture utility, not a screen-unlock tool. It does not change system Auto-Lock settings or bypass the passcode. No login or paid features are required.
+
+Testing steps:
+1. Use a physical iPhone running iOS 17 or later and connect power. Simulator battery state may be unknown and cannot demonstrate the core feature.
+2. Tap 开启充电亮屏. The bundled silent charging animation displays the system battery reading in PiP. Swipe Home manually to switch apps.
+3. Disconnect power or open the app and tap 停止充电亮屏. Playback and PiP stop; the system's original Auto-Lock settings apply.
+4. Guide explains optional user-created Shortcuts charger automations. The application cannot install personal automations or unlock the phone.
+5. About → 问题反馈与诊断: inspect/export the diagnostic report. Diagnostic upload is off by default. A feedback submission needs explicit consent and contains only the optional report, user description and optional contact email.
+
+Background mode audio is used for AVKit Picture in Picture playback of the bundled charging visualization. The intent is to keep the display awake while charging; we disclose this purpose explicitly and request review of this use. We do not claim this guarantees compliance with guideline 2.5.4. No private API or executable-code download/update mechanism is included.
+
+App UI and support website are Simplified Chinese. Support: feedback.pluglit@macseek.cc. Operator: 吴凯. Original icon artwork and bundled animation are made for this app; no third-party media, advertising, analytics SDK or account system.

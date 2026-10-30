@@ -3,11 +3,12 @@ import UIKit
 @MainActor
 final class AboutViewController: UITableViewController {
     private enum Item: Int, CaseIterable {
-        case update, website, apps, privacy, terms
+        case update, feedback, website, apps, privacy, terms
 
         var title: String {
             switch self {
             case .update: "检查更新"
+            case .feedback: "问题反馈与诊断"
             case .website: "官方网站"
             case .apps: "更多应用"
             case .privacy: "隐私政策"
@@ -17,6 +18,7 @@ final class AboutViewController: UITableViewController {
         var symbol: String {
             switch self {
             case .update: "arrow.triangle.2.circlepath"
+            case .feedback: "bubble.left.and.exclamationmark.bubble.right"
             case .website: "globe"
             case .apps: "square.grid.2x2"
             case .privacy: "hand.raised"
@@ -28,11 +30,11 @@ final class AboutViewController: UITableViewController {
             case .update: "PlugLitUpdateURL"
             case .website: "PlugLitWebsiteURL"
             case .apps: "PlugLitMoreAppsURL"
-            case .privacy, .terms: nil
+            case .feedback, .privacy, .terms: nil
             }
         }
     }
-    private let sections: [[Item]] = [[.update], [.website, .apps], [.privacy, .terms]]
+    private let sections: [[Item]] = [[.update, .feedback], [.website, .apps], [.privacy, .terms]]
     private var info: [String: Any] { Bundle.main.infoDictionary ?? [:] }
 
     init() { super.init(style: .insetGrouped) }
@@ -54,7 +56,7 @@ final class AboutViewController: UITableViewController {
     }
     override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
         switch section {
-        case 0: "版本 \(AppInformation.version(in: info))\n插上电，让屏幕亮着。\n通过发布页面获取新版本，不会自动安装更新。"
+        case 0: "版本 \(AppInformation.version(in: info))\n插上电，让屏幕亮着。\n正式更新通过 App Store 提供；尚未发布时显示官网发布说明。"
         case 2: "充电状态在本机处理，无需注册账号。"
         default: nil
         }
@@ -70,7 +72,9 @@ final class AboutViewController: UITableViewController {
         content.secondaryTextProperties.numberOfLines = 0
         content.directionalLayoutMargins.top = 16
         content.directionalLayoutMargins.bottom = 16
-        if let key = item.linkKey {
+        if item == .update {
+            content.secondaryText = AppInformation.updateURL(in: info).host == "apps.apple.com" ? "在 App Store 查看版本" : "查看官网发布进度"
+        } else if let key = item.linkKey {
             let available = AppInformation.url(for: key, in: info) != nil
             content.secondaryText = available ? (item == .update ? "前往发布页面查看最新版本" : "在浏览器中打开") : (item == .update ? "尚未接入发布渠道" : "暂未提供")
         }
@@ -83,6 +87,14 @@ final class AboutViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         let item = sections[indexPath.section][indexPath.row]
+        if item == .feedback {
+            navigationController?.pushViewController(FeedbackViewController(), animated: true)
+            return
+        }
+        if item == .update {
+            UIApplication.shared.open(AppInformation.updateURL(in: info))
+            return
+        }
         if let key = item.linkKey {
             guard let url = AppInformation.url(for: key, in: info) else {
                 notice(item.title, message: item == .update
@@ -107,7 +119,7 @@ final class AboutViewController: UITableViewController {
 }
 
 @MainActor
-private final class InformationTextViewController: UIViewController {
+final class InformationTextViewController: UIViewController {
     private let text: String
     init(title: String, text: String) {
         self.text = text

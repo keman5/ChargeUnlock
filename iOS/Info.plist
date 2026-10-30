@@ -6,8 +6,11 @@
 <key>CFBundleExecutable</key><string>$(EXECUTABLE_NAME)</string>
 <key>CFBundleName</key><string>PlugLit</string>
 <key>CFBundlePackageType</key><string>APPL</string>
-<key>CFBundleShortVersionString</key><string>0.3.1</string>
-<key>CFBundleVersion</key><string>5</string>
+<key>CFBundleShortVersionString</key><string>0.4.0</string>
+<key>CFBundleVersion</key><string>6</string>
+<key>ITSAppUsesNonExemptEncryption</key><false/>
+<key>PlugLitWebsiteURL</key><string>https://auv.macseek.cc</string>
+<key>PlugLitMoreAppsURL</key><string>https://auv.macseek.cc/apps/</string>
 <key>LSRequiresIPhoneOS</key><true/>
 <key>UIBackgroundModes</key><array><string>audio</string></array>
 <key>UILaunchScreen</key><dict/>

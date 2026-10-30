@@ -30,6 +30,8 @@ case "$MODE" in
   "$TMP/battery-overlay"
   xcrun swiftc -swift-version 6 -parse-as-library "$ROOT/iOS/AppInformation.swift" "$ROOT/Tests/app-information.swift" -o "$TMP/app-information"
   "$TMP/app-information"
+  xcrun swiftc -swift-version 6 -parse-as-library "$ROOT/iOS/DiagnosticReport.swift" "$ROOT/Tests/diagnostics.swift" -o "$TMP/diagnostics"
+  "$TMP/diagnostics"
   ;;
  ios|ios-install)
   DEVICE="${2:?device UDID required}"
@@ -64,5 +66,12 @@ case "$MODE" in
     xcrun simctl launch "$SIMULATOR" local.chargeunlock.ios
   fi
   ;;
- *) echo 'Usage: ./build.sh [test|simulator|simulator-install UDID|ios DEVICE TEAM|ios-install DEVICE TEAM]' >&2; exit 2 ;;
+ website|website-deploy)
+  clear_caches
+  "$ROOT/website/build.sh" "${MODE#website}"
+  ;;
+ appstore-check|appstore-archive|appstore-upload|appstore-screenshots)
+  "$ROOT/release/build.sh" "$@"
+  ;;
+ *) echo 'Usage: ./build.sh [test|simulator|simulator-install UDID|ios DEVICE TEAM|ios-install DEVICE TEAM|website|website-deploy|appstore-check|appstore-archive|appstore-upload]' >&2; exit 2 ;;
 esac

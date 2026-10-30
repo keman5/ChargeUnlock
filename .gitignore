@@ -6,3 +6,11 @@ xcuserdata/
 iOS/Build/*
 iOS/Signing.local.xcconfig
 iOS/Resources/KeepAwake.mp4
+website/.wrangler/
+website/dist/
+.asc/
+*.p8
+*.p12
+*.key
+*.mobileprovision
+release/contact.local.json

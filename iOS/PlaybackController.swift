@@ -69,6 +69,7 @@ final class PlaybackController: NSObject, @preconcurrency AVPictureInPictureCont
     }
 
     func start() async throws {
+        Diagnostics.record("start_requested")
         guard !policy.stopping else { throw PlaybackError.stopping }
         guard powered else {
             stop(reason: "未检测到充电，请先连接电源。")
@@ -124,6 +125,7 @@ final class PlaybackController: NSObject, @preconcurrency AVPictureInPictureCont
     }
 
     func stop(reason: String = "已停止亮屏，恢复原有自动锁屏行为。") {
+        Diagnostics.record("stop_requested")
         preparationID = UUID()
         stopReason = reason
         policy.stop(pictureInPicturePending: policy.stopping || active || attempt)
@@ -172,11 +174,7 @@ final class PlaybackController: NSObject, @preconcurrency AVPictureInPictureCont
     private func status(_ text: String) {
         message = text
         logger.notice("\(text, privacy: .public)")
-        let record: [String: Any] = ["message": text, "requested": policy.requested, "stopping": policy.stopping, "pipActive": active, "powered": powered, "playbackRate": player.rate, "battery": batteryText, "time": Date().timeIntervalSince1970]
-        if let data = try? JSONSerialization.data(withJSONObject: record, options: [.prettyPrinted, .sortedKeys]),
-           let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
-            try? data.write(to: documents.appendingPathComponent("status.json"), options: .atomic)
-        }
+        Diagnostics.record("playback_status")
         onChange?()
     }
 
@@ -188,6 +186,7 @@ final class PlaybackController: NSObject, @preconcurrency AVPictureInPictureCont
     }
 
     @objc private func powerChanged() {
+        Diagnostics.record("power_or_playback_changed", onlyIfChanged: true)
         updateBatteryOverlay()
         if !powered && (policy.requested || active || attempt) && !policy.stopping {
             stop(reason: "电源已断开，充电亮屏已停止。")
@@ -225,26 +224,15 @@ final class PlaybackController: NSObject, @preconcurrency AVPictureInPictureCont
     func pictureInPictureControllerDidStartPictureInPicture(_ controller: AVPictureInPictureController) {
         attempt = false
         guard powered, policy.requested else { stop(); return }
-        status("画中画已开启，正在返回桌面。")
-        // This developer-installed app uses a private API; iOS has no public Home Screen action.
-        // Defer until the PiP delegate callback completes, and recheck for a stop or unplug.
-        DispatchQueue.main.async { [weak self] in
-            guard let self, self.powered, self.policy.requested, self.active,
-                  UIApplication.shared.applicationState == .active else { return }
-            let application = UIApplication.shared
-            let suspend = NSSelectorFromString("suspend")
-            guard application.responds(to: suspend) else {
-                self.status("画中画已开启，请上滑返回桌面。")
-                return
-            }
-            application.perform(suspend)
-        }
+        status("画中画已开启，可上滑返回桌面或切换 App。")
+        Diagnostics.record("pip_started")
     }
     func pictureInPictureController(_ controller: AVPictureInPictureController, failedToStartPictureInPictureWithError error: Error) {
         attempt = false
         policy.didStopPictureInPicture()
         stop(reason: "画中画未能启动，请留在本页后重试。")
-        logger.error("PiP failed: \(error.localizedDescription, privacy: .public)")
+        Diagnostics.record("pip_error_\((error as NSError).code)")
+        logger.error("PiP failed with code \((error as NSError).code)")
     }
     func pictureInPictureControllerDidStopPictureInPicture(_ controller: AVPictureInPictureController) {
         if policy.requested { stopReason = "画中画已关闭，亮屏已停止。" }
