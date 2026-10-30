@@ -28,6 +28,8 @@ case "$MODE" in
   "$TMP/ios-policy"
   xcrun swiftc -swift-version 6 -parse-as-library "$ROOT/iOS/BatteryOverlay.swift" "$ROOT/Tests/battery-overlay.swift" -o "$TMP/battery-overlay"
   "$TMP/battery-overlay"
+  xcrun swiftc -swift-version 6 -parse-as-library "$ROOT/iOS/AppInformation.swift" "$ROOT/Tests/app-information.swift" -o "$TMP/app-information"
+  "$TMP/app-information"
   ;;
  ios|ios-install)
   DEVICE="${2:?device UDID required}"
@@ -49,13 +51,18 @@ case "$MODE" in
     xcrun devicectl device process launch --device "$DEVICE" local.chargeunlock.ios
   fi
   ;;
- simulator)
+ simulator|simulator-install)
   clear_caches
   "$ROOT/build.sh" test
   mkdir -p "$ROOT/iOS/Resources" "$CACHE/iOS"
   xcrun swiftc -parse-as-library "$ROOT/iOS/Tools/GenerateMedia.swift" -o "$CACHE/iOS/GenerateMedia"
   "$CACHE/iOS/GenerateMedia" "$ROOT/iOS/Resources/KeepAwake.mp4"
   run_child xcrun xcodebuild -project "$ROOT/iOS/ChargeUnlock.xcodeproj" -scheme ChargeUnlock -configuration Debug -destination 'generic/platform=iOS Simulator' -derivedDataPath "$CACHE/Simulator" CODE_SIGNING_ALLOWED=NO build
+  if [[ "$MODE" == simulator-install ]]; then
+    SIMULATOR="${2:?simulator UDID required}"
+    xcrun simctl install "$SIMULATOR" "$CACHE/Simulator/Build/Products/Debug-iphonesimulator/ChargeUnlock.app"
+    xcrun simctl launch "$SIMULATOR" local.chargeunlock.ios
+  fi
   ;;
- *) echo 'Usage: ./build.sh [test|simulator|ios DEVICE TEAM|ios-install DEVICE TEAM]' >&2; exit 2 ;;
+ *) echo 'Usage: ./build.sh [test|simulator|simulator-install UDID|ios DEVICE TEAM|ios-install DEVICE TEAM]' >&2; exit 2 ;;
 esac

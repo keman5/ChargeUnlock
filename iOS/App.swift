@@ -70,7 +70,14 @@ final class MainViewController: UIViewController {
         title.text = "电亮"
         title.font = .preferredFont(forTextStyle: .largeTitle)
         title.adjustsFontForContentSizeCategory = true
-        stack.addArrangedSubview(title)
+        title.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        let header = UIStackView(arrangedSubviews: [title,
+            headerButton(symbol: "info", label: "关于电亮", identifier: "openAbout", action: #selector(showAbout)),
+            headerButton(symbol: "book.closed", label: "自动化设置与使用指南", identifier: "openGuide", action: #selector(showGuide))])
+        header.alignment = .center
+        header.spacing = 8
+        stack.addArrangedSubview(header)
+        stack.setCustomSpacing(6, after: header)
         let subtitle = UILabel()
         subtitle.text = "PlugLit · 插上电，让屏幕亮着"
         subtitle.font = .preferredFont(forTextStyle: .subheadline)
@@ -119,23 +126,22 @@ final class MainViewController: UIViewController {
         status.accessibilityIdentifier = "playbackStatus"
         stack.addArrangedSubview(status)
         toggle.configuration = .filled()
+        toggle.configuration?.cornerStyle = .fixed
+        toggle.configuration?.background.cornerRadius = 16
+        toggle.configuration?.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attributes in
+            var attributes = attributes
+            attributes.font = UIFont.preferredFont(forTextStyle: .headline)
+            return attributes
+        }
         toggle.configuration?.baseForegroundColor = UIColor { $0.userInterfaceStyle == .dark ? .black : .white }
         toggle.configuration?.imagePadding = 8
-        toggle.configuration?.contentInsets = NSDirectionalEdgeInsets(top: 16, leading: 16, bottom: 16, trailing: 16)
+        toggle.configuration?.contentInsets = NSDirectionalEdgeInsets(top: 14, leading: 20, bottom: 14, trailing: 20)
+        toggle.heightAnchor.constraint(greaterThanOrEqualToConstant: 52).isActive = true
         toggle.addTarget(self, action: #selector(toggleCharging), for: .touchUpInside)
         toggle.accessibilityIdentifier = "toggleCharging"
         stack.addArrangedSubview(toggle)
         stack.addArrangedSubview(instructionCard(symbol: "hand.pinch", title: "画中画太大？", body: "双指捏合即可缩放，再拖到合适角落。电亮会沿用 iOS 记住的窗口尺寸。"))
         stack.addArrangedSubview(instructionCard(symbol: "info.circle", title: "关于亮屏与锁屏", body: "iOS 不允许应用自行调整画中画的位置和大小。保持视频播放即可维持亮屏；收起到边缘后，请确认本机是否仍亮屏。拔电或停止后，按原有设置自动锁屏。"))
-        let guide = UIButton(type: .system)
-        guide.configuration = .tinted()
-        guide.configuration?.title = "自动化设置与使用指南"
-        guide.configuration?.image = UIImage(systemName: "book.closed")
-        guide.configuration?.imagePadding = 8
-        guide.configuration?.contentInsets = NSDirectionalEdgeInsets(top: 16, leading: 12, bottom: 16, trailing: 12)
-        guide.accessibilityIdentifier = "openGuide"
-        guide.addTarget(self, action: #selector(showGuide), for: .touchUpInside)
-        stack.addArrangedSubview(guide)
         controller.onChange = { [weak self] in self?.refresh() }
         refresh()
     }
@@ -184,5 +190,21 @@ final class MainViewController: UIViewController {
         guard presentedViewController == nil else { return }
         UserDefaults.standard.set(true, forKey: "pluglitGuideSeen")
         present(UINavigationController(rootViewController: GuideViewController()), animated: true)
+    }
+    private func headerButton(symbol: String, label: String, identifier: String, action: Selector) -> UIButton {
+        let button = UIButton(type: .system)
+        button.configuration = .tinted()
+        button.configuration?.image = UIImage(systemName: symbol, withConfiguration: UIImage.SymbolConfiguration(pointSize: 18, weight: .medium))
+        button.configuration?.cornerStyle = .capsule
+        button.accessibilityLabel = label
+        button.accessibilityIdentifier = identifier
+        button.widthAnchor.constraint(equalToConstant: 44).isActive = true
+        button.heightAnchor.constraint(equalToConstant: 44).isActive = true
+        button.addTarget(self, action: action, for: .touchUpInside)
+        return button
+    }
+    @objc private func showAbout() {
+        guard presentedViewController == nil else { return }
+        present(UINavigationController(rootViewController: AboutViewController()), animated: true)
     }
 }

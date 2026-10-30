@@ -107,6 +107,8 @@ final class GuideViewController: UIViewController {
         detailsButton.configuration?.title = "常见问题与停用方法"
         detailsButton.configuration?.image = UIImage(systemName: "chevron.down")
         detailsButton.configuration?.imagePadding = 8
+        detailsButton.configuration?.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 4, bottom: 12, trailing: 4)
+        detailsButton.heightAnchor.constraint(greaterThanOrEqualToConstant: 44).isActive = true
         detailsButton.contentHorizontalAlignment = .leading
         detailsButton.accessibilityIdentifier = "guideDetails"
         detailsButton.accessibilityValue = "已折叠"
