@@ -76,7 +76,7 @@ final class MainViewController: UIViewController {
         title.adjustsFontForContentSizeCategory = true
         title.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         let header = UIStackView(arrangedSubviews: [title,
-            headerButton(symbol: "info", label: "关于电亮", identifier: "openAbout", action: #selector(showAbout)),
+            headerButton(symbol: "info.circle", label: "关于电亮", identifier: "openAbout", action: #selector(showAbout)),
             headerButton(symbol: "book.closed", label: "自动化设置与使用指南", identifier: "openGuide", action: #selector(showGuide))])
         header.alignment = .center
         header.spacing = 8
@@ -145,7 +145,6 @@ final class MainViewController: UIViewController {
         toggle.accessibilityIdentifier = "toggleCharging"
         stack.addArrangedSubview(toggle)
         stack.addArrangedSubview(instructionCard(symbol: "hand.pinch", title: "画中画太大？", body: "双指捏合即可缩放，再拖到合适角落。电亮会沿用 iOS 记住的窗口尺寸。"))
-        stack.addArrangedSubview(instructionCard(symbol: "info.circle", title: "关于亮屏与锁屏", body: "iOS 不允许应用自行调整画中画的位置和大小。播放视频可在系统允许时保持亮屏；收起到边缘后，请确认本机是否仍亮屏。拔电或停止后，按原有设置自动锁屏。"))
         controller.onChange = { [weak self] in self?.refresh() }
         refresh()
     }
@@ -162,6 +161,9 @@ final class MainViewController: UIViewController {
             case "about": showAbout()
             case "feedback": present(UINavigationController(rootViewController: FeedbackViewController()), animated: false)
             case "guide": showGuide()
+            case "privacy", "terms":
+                let privacy = ProcessInfo.processInfo.arguments[index + 1] == "privacy"
+                present(UINavigationController(rootViewController: InformationTextViewController(title: privacy ? "隐私政策" : "使用条款", text: privacy ? AppInformation.privacy : AppInformation.terms)), animated: false)
             default: break
             }
             return

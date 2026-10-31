@@ -1,5 +1,26 @@
 # 电亮 PlugLit 发布
 
+## 已提交审核（2026-10-31 01:46，Asia/Shanghai）
+
+- Apple 官方下载的 Xcode 27.1 (27A9275) 已通过根 `build.sh xcode-install` 安装到 `/Applications/Xcode-27.1.app`；应用 Apple 签名与 Gatekeeper 检查通过，首次运行状态检查通过，系统 Xcode 选择仍是 `/Applications/Xcode.app/Contents/Developer`。
+- 通过该工具链执行根 `build.sh appstore-archive`，测试、归档、签名验证和导出均成功。IPA 0.4.0 (8) 的 `DTXcodeBuild=27A9275`、`DTSDKName=iphoneos27.1`、`DTSDKBuild=24A94232`，包含关于页和首页关于图标更新。
+- 根 `build.sh appstore-upload` 完成上传、处理及关联。Build ID：`9237d43f-9ed0-4c82-bf24-e326afb419b4`；Version ID：`c4a77f54-19cc-4e67-8e81-e3e1b4c20904`。提交前验证零阻断；首发 whatsNew 警告保留，隐私发布经 Edge 再次确认。
+- 审核草稿首次提交前查询超时，核验唯一草稿后使用同一个 submission ID 完成提交，没有重复创建。Submission ID：`53810495-9c0a-4c0e-97a6-c1ac7664b268`，Apple 回执 `WAITING_FOR_REVIEW`，UTC 提交时间 `2026-10-30T17:46:35.911Z`。回执：`release/evidence/submission-0.4.0-8.json`。
+- 销售范围回读仍为 147 地区，排除 CHN 与欧盟 27 国，保留免费和手动发布。提交审核不等于已批准或已上架；本轮没有重新进行完整真机行为回归。
+- 本次安装与提审工作完成，暂停自动化 `xcode-27-1-pluglit`。后续查询：`asc review status --app 6828947154 --version 0.4.0 --platform IOS --output table`。
+
+## 准备阶段记录（历史状态，以以上提交回执为准）
+
+- 本轮主页右上角关于入口改用 `info.circle`，保留 44pt 点击区域和无障碍标签。`./build.sh simulator-install BFA6C550-9AFA-4722-B8AC-E19EE7A70225` 测试、构建与安装通过；截图 `release/evidence/about-icon-circle.png`。后续正式归档应包含此改动。
+- 本轮再次回读 Apple：元数据 dry-run 无差异，元数据和 URL 验证通过，隐私页已发布，147 地区可用且 CHN 与欧盟 27 国关闭。0.4.0 仍准备提交、没有可用构建；Xcode 27.1 尚无完整本地 xip。已更新原有每小时自动化继续安装、归档和提审，不创建重复任务。
+- 用户改为先海外首发，并明确先排除欧盟：已通过 Apple API 保存并回读验证 147 个地区可用，排除中国大陆 CHN 与欧盟 27 国。Edge 页面也显示「147 个可用 / 28 个国家和地区未供应」。仍为免费、手动发布、不自动扩展新地区。证据：`release/evidence/availability-2026-10-31.json`。
+- 先前大陆备案、欧盟 DSA 资料缺失不再阻塞本次选定地区；没有填写虚构声明。
+- 关于页的版本号已移到检查更新上方，采用相同列表布局，并删除原版本页脚说明。源码版本 0.4.0 (8)；根脚本测试与模拟器构建通过，模拟器安装与截图验证通过。截图：`release/evidence/about-version-row.png`。当前 Release IPA 仍是旧构建，不能将其当作新构建 8 上传。
+- App Store 文案、审核资料、截图通过现有验证，隐私发布状态经 Edge 确认。最新 `asc validate --ipa` 唯一阻断仍是缺少有效关联构建；首发 whatsNew 是非阻断警告。
+- Xcode 27.1 仍在下载。安装入口：`./build.sh xcode-install /绝对路径/Xcode_27.1.xip`，验证 Apple 签名和版本，安装为 `/Applications/Xcode-27.1.app`，保留现有工具链与全局选择。安装器只完成副本安装；若首次运行组件或许可需人工处理，报告实际阻塞，不自动假定已完成。
+- 本聊天已创建每小时跟进自动化 `xcode-27-1-pluglit`。下载完成后安装，使用 `DEVELOPER_DIR=/Applications/Xcode-27.1.app/Contents/Developer ./build.sh appstore-archive` 重建，再用现有上传脚本上传并等待处理。用户已授权继续提交审核；必须先验证实际构建、地区与资料，先 dry-run，再提交。通过后仍手动发布。任务完成后暂停自动化。
+- 尚未提交审核，也未把本轮构建 8 安装至真机；下载/安装、正式构建处理与审核回执均待后续实际验证。
+
 所有构建在本机通过根 `build.sh` 执行。发布私钥、证书和描述文件位于仓库外的 `~/.config/pluglit/signing/`，API 密钥存于 macOS 钥匙串。不要提交或上传这些私钥到官网。
 
 ## 命令
@@ -48,6 +69,6 @@ Cloudflare Worker `auv-pluglit`，D1 `pluglit-feedback`。仅后台账户可读�
 - 销售范围暂仅选择中国大陆，不自动扩展新地区；通过后手动发布。没有 App 备案号，未提交审核。
 - 构建 6 曾上传但处理失败：Apple 错误 90534，拒绝 Xcode 27.2 (27B52) / iphoneos27.2 (24B8118)。Apple 官网已列出该正式版，但上传后端当前尚未接受；不能伪造 SDK 标识。构建 7 未重复上传同一不受支持工具链。
 - 官方下载页同时列有 Xcode 27.1 (27A9275)，但本机 Edge 下载被 ERR_BLOCKED_BY_CLIENT 阻断。安装后用 `DEVELOPER_DIR=/Applications/Xcode-27.1.app/Contents/Developer ./build.sh appstore-archive` 重建，勿全局替换当前开发工具链。重新上传需实际核验处理状态。
-- 隐私三项数据用途已保存，用户于 2026-10-31 明确确认发布；最终发布回执见 VALIDATION.md。
+- 隐私三项数据用途已保存，用户于 2026-10-31 明确确认发布；已在页面核验“由旺旺 杨发布”，详见根目录 VALIDATION.md。
 - `./build.sh appstore-screenshots <SIMULATOR_UDID>` 从 Debug 页面入口捕获真实 UI，导出无透明 JPEG。模拟器不能展示有效 PiP；商店仅使用指南和反馈页，主屏“不支持 PiP”截图不上传。
 - `./build.sh feedback-network-check` 向官网提交合成内容，验证 URLSession、重复重试与删除。不要用此脚本发送用户真实诊断资料。

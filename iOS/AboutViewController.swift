@@ -3,10 +3,11 @@ import UIKit
 @MainActor
 final class AboutViewController: UITableViewController {
     private enum Item: Int, CaseIterable {
-        case update, feedback, website, apps, privacy, terms
+        case version, update, feedback, website, apps, privacy, terms
 
         var title: String {
             switch self {
+            case .version: "版本号"
             case .update: "检查更新"
             case .feedback: "问题反馈与诊断"
             case .website: "官方网站"
@@ -17,6 +18,7 @@ final class AboutViewController: UITableViewController {
         }
         var symbol: String {
             switch self {
+            case .version: "info.circle"
             case .update: "arrow.triangle.2.circlepath"
             case .feedback: "bubble.left.and.exclamationmark.bubble.right"
             case .website: "globe"
@@ -30,11 +32,11 @@ final class AboutViewController: UITableViewController {
             case .update: "PlugLitUpdateURL"
             case .website: "PlugLitWebsiteURL"
             case .apps: "PlugLitMoreAppsURL"
-            case .feedback, .privacy, .terms: nil
+            case .version, .feedback, .privacy, .terms: nil
             }
         }
     }
-    private let sections: [[Item]] = [[.update, .feedback], [.website, .apps], [.privacy, .terms]]
+    private let sections: [[Item]] = [[.version, .update, .feedback], [.website, .apps], [.privacy, .terms]]
     private var info: [String: Any] { Bundle.main.infoDictionary ?? [:] }
 
     init() { super.init(style: .insetGrouped) }
@@ -54,13 +56,6 @@ final class AboutViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         ["电亮 PlugLit", "发现", "隐私与条款"][section]
     }
-    override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
-        switch section {
-        case 0: "版本 \(AppInformation.version(in: info))\n插上电，让屏幕亮着。\n正式更新通过 App Store 提供；尚未发布时显示官网发布说明。"
-        case 2: "充电状态在本机处理，无需注册账号。"
-        default: nil
-        }
-    }
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let item = sections[indexPath.section][indexPath.row]
         let cell = UITableViewCell(style: .default, reuseIdentifier: nil)
@@ -72,21 +67,24 @@ final class AboutViewController: UITableViewController {
         content.secondaryTextProperties.numberOfLines = 0
         content.directionalLayoutMargins.top = 16
         content.directionalLayoutMargins.bottom = 16
-        if item == .update {
-            content.secondaryText = AppInformation.updateURL(in: info).host == "apps.apple.com" ? "在 App Store 查看版本" : "查看官网发布进度"
+        if item == .version {
+            content.secondaryText = AppInformation.version(in: info)
         } else if let key = item.linkKey {
-            let available = AppInformation.url(for: key, in: info) != nil
-            content.secondaryText = available ? (item == .update ? "前往发布页面查看最新版本" : "在浏览器中打开") : (item == .update ? "尚未接入发布渠道" : "暂未提供")
+            if item != .update && AppInformation.url(for: key, in: info) == nil {
+                content.secondaryText = "暂未提供"
+            }
         }
         cell.contentConfiguration = content
-        cell.accessoryType = .disclosureIndicator
+        cell.accessoryType = item == .version ? .none : .disclosureIndicator
+        cell.selectionStyle = item == .version ? .none : .default
         cell.accessibilityIdentifier = "about_\(item)"
-        cell.accessibilityTraits.insert(.button)
+        if item != .version { cell.accessibilityTraits.insert(.button) }
         return cell
     }
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         let item = sections[indexPath.section][indexPath.row]
+        guard item != .version else { return }
         if item == .feedback {
             navigationController?.pushViewController(FeedbackViewController(), animated: true)
             return
@@ -121,6 +119,7 @@ final class AboutViewController: UITableViewController {
 @MainActor
 final class InformationTextViewController: UIViewController {
     private let text: String
+    private let textView = UITextView()
     init(title: String, text: String) {
         self.text = text
         super.init(nibName: nil, bundle: nil)
@@ -130,21 +129,53 @@ final class InformationTextViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
-        let textView = UITextView()
         textView.isEditable = false
         textView.backgroundColor = .systemBackground
-        textView.textColor = .label
-        textView.font = .preferredFont(forTextStyle: .body)
-        textView.adjustsFontForContentSizeCategory = true
-        textView.text = text
-        textView.textContainerInset = UIEdgeInsets(top: 20, left: 20, bottom: 28, right: 20)
+        textView.dataDetectorTypes = [.link]
+        textView.linkTextAttributes = [.foregroundColor: UIColor.label, .underlineStyle: NSUnderlineStyle.single.rawValue]
+        textView.textContainer.lineFragmentPadding = 0
+        textView.textContainerInset = UIEdgeInsets(top: 24, left: 0, bottom: 40, right: 0)
+        textView.accessibilityIdentifier = "informationDocument"
+        renderText()
+        registerForTraitChanges([UITraitPreferredContentSizeCategory.self]) { (controller: InformationTextViewController, _: UITraitCollection) in
+            controller.renderText()
+        }
         textView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(textView)
         NSLayoutConstraint.activate([
-            textView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            textView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            textView.leadingAnchor.constraint(equalTo: view.readableContentGuide.leadingAnchor),
+            textView.trailingAnchor.constraint(equalTo: view.readableContentGuide.trailingAnchor),
             textView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             textView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
         ])
+    }
+
+    private func renderText() {
+        let paragraph = NSMutableParagraphStyle()
+        paragraph.lineSpacing = 6
+        paragraph.paragraphSpacing = 8
+        let body = UIFont.preferredFont(forTextStyle: .body, compatibleWith: traitCollection)
+        let displayText = text.replacingOccurrences(of: "\n\n", with: "\n")
+        let formatted = NSMutableAttributedString(string: displayText, attributes: [
+            .font: body, .foregroundColor: UIColor.label, .paragraphStyle: paragraph
+        ])
+        var offset = 0
+        for (index, section) in text.components(separatedBy: "\n\n").enumerated() {
+            let firstLine = section.components(separatedBy: "\n")[0]
+            let range = NSRange(location: offset, length: (firstLine as NSString).length)
+            let spacing = paragraph.mutableCopy() as! NSMutableParagraphStyle
+            spacing.paragraphSpacingBefore = index == 0 ? 0 : 24
+            spacing.paragraphSpacing = index == 0 ? 12 : 10
+            formatted.addAttributes([
+                .font: index == 0
+                    ? UIFont.preferredFont(forTextStyle: .subheadline, compatibleWith: traitCollection)
+                    : UIFontMetrics(forTextStyle: .title3).scaledFont(for: .systemFont(ofSize: 20, weight: .semibold), compatibleWith: traitCollection),
+                .foregroundColor: index == 0 ? UIColor.secondaryLabel : UIColor.label,
+                .paragraphStyle: spacing
+            ], range: range)
+            offset += (section as NSString).length + 1
+        }
+        assert(formatted.string == displayText, "Legal formatting must preserve the complete policy text")
+        textView.attributedText = formatted
     }
 }

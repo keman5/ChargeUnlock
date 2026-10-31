@@ -20,6 +20,9 @@ clear_caches() {
   rm -rf "$ROOT/.artifacts"
 }
 case "$MODE" in
+ xcode-install)
+  "$ROOT/release/xcode/build.sh" "${2:?path to completed Xcode 27.1 xip required}"
+  ;;
  test)
   clear_caches
   TMP="$(mktemp -d "$CACHE/check.XXXXXX")"
@@ -78,5 +81,5 @@ case "$MODE" in
  appstore-check|appstore-archive|appstore-upload|appstore-screenshots)
   "$ROOT/release/build.sh" "$@"
   ;;
- *) echo 'Usage: ./build.sh [test|simulator|simulator-install UDID|ios DEVICE TEAM|ios-install DEVICE TEAM|feedback-network-check|website|website-deploy|appstore-check|appstore-archive|appstore-upload|appstore-screenshots UDID]' >&2; exit 2 ;;
+ *) echo 'Usage: ./build.sh [test|simulator|simulator-install UDID|ios DEVICE TEAM|ios-install DEVICE TEAM|feedback-network-check|website|website-deploy|appstore-check|appstore-archive|appstore-upload|appstore-screenshots UDID|xcode-install XIP_PATH]' >&2; exit 2 ;;
 esac

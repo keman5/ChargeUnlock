@@ -7,7 +7,7 @@
 <key>CFBundleName</key><string>PlugLit</string>
 <key>CFBundlePackageType</key><string>APPL</string>
 <key>CFBundleShortVersionString</key><string>0.4.0</string>
-<key>CFBundleVersion</key><string>7</string>
+<key>CFBundleVersion</key><string>8</string>
 <key>ITSAppUsesNonExemptEncryption</key><false/>
 <key>PlugLitWebsiteURL</key><string>https://auv.macseek.cc</string>
 <key>PlugLitMoreAppsURL</key><string>https://auv.macseek.cc/apps/</string>
