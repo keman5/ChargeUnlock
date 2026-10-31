@@ -19,6 +19,10 @@ struct BatteryOverlayCheck {
         assert(charging != empty, "Battery caption must be visible in the video frame")
         overlay.update(caption: "电量已满 · 100%")
         assert(pixels() != charging, "Battery changes must replace the caption without restarting playback")
+        DispatchQueue.concurrentPerform(iterations: 40) { index in
+            if index.isMultiple(of: 2) { overlay.update(caption: "充电 · \(index)%") }
+            else { assert(overlay.composite(over: source).extent == bounds) }
+        }
         print("PASS: battery overlay draws and updates in a 960×540 video frame")
     }
 }

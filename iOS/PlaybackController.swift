@@ -8,7 +8,7 @@ final class PlaybackController: NSObject, @preconcurrency AVPictureInPictureCont
     static let shared = PlaybackController()
     let player = AVQueuePlayer()
     let layer = AVPlayerLayer()
-    private(set) var message = "连接电源后，开启充电亮屏。"
+    private(set) var message = L("Connect power, then start Keep Awake.")
     private(set) var policy = ChargingPolicy()
     var onChange: (() -> Void)?
     private let batteryOverlay = BatteryOverlay()
@@ -22,13 +22,13 @@ final class PlaybackController: NSObject, @preconcurrency AVPictureInPictureCont
     private var powerObservation: Any?
     private var foregroundBatteryTimer: Timer?
     private var stopTask: UIBackgroundTaskIdentifier = .invalid
-    private var stopReason = "已停止亮屏，恢复原有自动锁屏行为。"
+    private var stopReason = L("Stopped. Your usual Auto-Lock settings apply.")
     private var attempt = false
     private let logger = Logger(subsystem: "local.chargeunlock.ios", category: "playback")
 
     var powered: Bool { [.charging, .full].contains(UIDevice.current.batteryState) }
     var batteryText: String { BatteryReading.percentageText(UIDevice.current.batteryLevel) }
-    var powerText: String { UIDevice.current.batteryState == .full ? "电量已满" : powered ? "正在充电" : "未连接电源" }
+    var powerText: String { UIDevice.current.batteryState == .full ? L("Fully charged") : powered ? L("Charging") : L("Not plugged in") }
     var active: Bool { pip?.isPictureInPictureActive == true }
 
     override private init() {
@@ -52,7 +52,7 @@ final class PlaybackController: NSObject, @preconcurrency AVPictureInPictureCont
         refreshForegroundBattery()
         guard pip == nil else { attemptStart(); return }
         guard AVPictureInPictureController.isPictureInPictureSupported() else {
-            status("此设备不支持画中画。")
+            status(L("Picture in Picture is unavailable on this device."))
             return
         }
         pip = AVPictureInPictureController(playerLayer: layer)
@@ -72,7 +72,7 @@ final class PlaybackController: NSObject, @preconcurrency AVPictureInPictureCont
         Diagnostics.record("start_requested")
         guard !policy.stopping else { throw PlaybackError.stopping }
         guard powered else {
-            stop(reason: "未检测到充电，请先连接电源。")
+            stop(reason: L("No power detected. Please plug in first."))
             throw PlaybackError.notPowered
         }
         guard !policy.requested else { return }
@@ -80,14 +80,23 @@ final class PlaybackController: NSObject, @preconcurrency AVPictureInPictureCont
         let requestID = UUID()
         preparationID = requestID
         _ = policy.start(powered: true)
-        status("正在准备充电画面…")
+        status(L("Preparing charging display…"))
         updateBatteryOverlay()
         do {
             let item = AVPlayerItem(url: url)
             let overlay = batteryOverlay
-            let composition = try await AVVideoComposition.videoComposition(with: item.asset, applyingCIFiltersWithHandler: { request in
-                request.finish(with: overlay.composite(over: request.sourceImage), context: nil)
-            })
+            let composition: AVVideoComposition
+            if #available(iOS 16.0, *) {
+                composition = try await AVVideoComposition.videoComposition(with: item.asset, applyingCIFiltersWithHandler: { request in
+                    request.finish(with: overlay.composite(over: request.sourceImage), context: nil)
+                })
+            } else {
+                // Preload metadata so the iOS 15 composition initializer does not block on file loading.
+                _ = try await item.asset.load(.duration, .tracks)
+                composition = AVVideoComposition(asset: item.asset, applyingCIFiltersWithHandler: { request in
+                    request.finish(with: overlay.composite(over: request.sourceImage), context: nil)
+                })
+            }
             // A stop or unplug during asynchronous preparation must never restart playback.
             guard preparationID == requestID, policy.requested, powered else { return }
             item.videoComposition = composition
@@ -100,7 +109,7 @@ final class PlaybackController: NSObject, @preconcurrency AVPictureInPictureCont
             itemObservation = player.observe(\.status, options: [.new]) { [weak self] _, _ in
                 Task { @MainActor in
                     guard let self, self.player.status == .failed else { return }
-                    self.stop(reason: "充电画面播放失败，请重试。")
+                    self.stop(reason: L("Charging playback failed. Please try again."))
                 }
             }
             player.preventsDisplaySleepDuringVideoPlayback = true
@@ -108,10 +117,10 @@ final class PlaybackController: NSObject, @preconcurrency AVPictureInPictureCont
                 Task { @MainActor in self?.powerChanged() }
             }
             player.play()
-            status("正在开启画中画…请稍候。")
+            status(L("Starting Picture in Picture… Please wait."))
             attemptStart()
         } catch {
-            if preparationID == requestID { stop(reason: "充电画面准备失败，请重试。") }
+            if preparationID == requestID { stop(reason: L("Unable to prepare charging display. Try again.")) }
             throw error
         }
     }
@@ -124,7 +133,7 @@ final class PlaybackController: NSObject, @preconcurrency AVPictureInPictureCont
         pip?.startPictureInPicture()
     }
 
-    func stop(reason: String = "已停止亮屏，恢复原有自动锁屏行为。") {
+    func stop(reason: String = L("Stopped. Your usual Auto-Lock settings apply.")) {
         Diagnostics.record("stop_requested")
         preparationID = UUID()
         stopReason = reason
@@ -143,11 +152,11 @@ final class PlaybackController: NSObject, @preconcurrency AVPictureInPictureCont
                     guard let self else { return }
                     self.player.pause()
                     self.endStopTask()
-                    self.status("画中画关闭未完成，已暂停播放；请解锁后重试停止。")
+                    self.status(L("Playback paused, but PiP has not closed. Unlock and try stopping again."))
                 }
             }
         }
-        status("正在关闭画中画…")
+        status(L("Closing Picture in Picture…"))
         pip?.stopPictureInPicture()
     }
 
@@ -189,7 +198,7 @@ final class PlaybackController: NSObject, @preconcurrency AVPictureInPictureCont
         Diagnostics.record("power_or_playback_changed", onlyIfChanged: true)
         updateBatteryOverlay()
         if !powered && (policy.requested || active || attempt) && !policy.stopping {
-            stop(reason: "电源已断开，充电亮屏已停止。")
+            stop(reason: L("Unplugged. Keep Awake stopped."))
         }
         onChange?()
     }
@@ -214,28 +223,28 @@ final class PlaybackController: NSObject, @preconcurrency AVPictureInPictureCont
         foregroundBatteryTimer = nil
         powerChanged()
     }
-    @objc private func playbackFailed() { stop(reason: "视频播放中断，亮屏已停止。") }
+    @objc private func playbackFailed() { stop(reason: L("Video interrupted. Keep Awake stopped.")) }
     @objc private func interrupted(_ note: Notification) {
         if (note.userInfo?[AVAudioSessionInterruptionTypeKey] as? NSNumber)?.uintValue == AVAudioSession.InterruptionType.began.rawValue {
-            stop(reason: "播放被系统打断，亮屏已停止。")
+            stop(reason: L("System interrupted playback. Keep Awake stopped."))
         }
     }
 
     func pictureInPictureControllerDidStartPictureInPicture(_ controller: AVPictureInPictureController) {
         attempt = false
         guard powered, policy.requested else { stop(); return }
-        status("画中画已开启，可上滑返回桌面或切换 App。")
+        status(L("PiP is on. Swipe up to go Home or switch apps."))
         Diagnostics.record("pip_started")
     }
     func pictureInPictureController(_ controller: AVPictureInPictureController, failedToStartPictureInPictureWithError error: Error) {
         attempt = false
         policy.didStopPictureInPicture()
-        stop(reason: "画中画未能启动，请留在本页后重试。")
+        stop(reason: L("PiP could not start. Stay on this page and try again."))
         Diagnostics.record("pip_error_\((error as NSError).code)")
         logger.error("PiP failed with code \((error as NSError).code)")
     }
     func pictureInPictureControllerDidStopPictureInPicture(_ controller: AVPictureInPictureController) {
-        if policy.requested { stopReason = "画中画已关闭，亮屏已停止。" }
+        if policy.requested { stopReason = L("PiP closed. Keep Awake stopped.") }
         policy.stop()
         if let powerObservation {
             player.removeTimeObserver(powerObservation)
@@ -254,9 +263,9 @@ enum PlaybackError: LocalizedError {
     case notPowered, missingVideo, stopping
     var errorDescription: String? {
         switch self {
-        case .notPowered: "请先连接电源，再开启充电亮屏。"
-        case .missingVideo: "本地视频资源缺失，请重新安装。"
-        case .stopping: "画中画正在关闭，请稍后再开启。"
+        case .notPowered: L("Plug in before starting Keep Awake.")
+        case .missingVideo: L("Bundled video is missing. Please reinstall the app.")
+        case .stopping: L("PiP is closing. Wait before starting again.")
         }
     }
 }

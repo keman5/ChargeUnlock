@@ -1,10 +1,11 @@
 import CoreImage
 import CoreText
-import os
+import Foundation
 
 // The video compositor reads immutable images off-main; battery updates replace them under the lock.
-final class BatteryOverlay: Sendable {
-    private let image = OSAllocatedUnfairLock<CIImage?>(initialState: nil)
+final class BatteryOverlay: @unchecked Sendable {
+    private let lock = NSLock()
+    private var image: CIImage?
 
     func update(caption: String) {
         guard let context = CGContext(data: nil, width: 960, height: 540, bitsPerComponent: 8,
@@ -20,11 +21,16 @@ final class BatteryOverlay: Sendable {
         CTLineDraw(line, context)
         guard let cgImage = context.makeImage() else { return }
         let rendered = CIImage(cgImage: cgImage)
-        image.withLock { $0 = rendered }
+        lock.lock()
+        image = rendered
+        lock.unlock()
     }
 
     func composite(over source: CIImage) -> CIImage {
-        guard let overlay = image.withLock({ $0 }) else { return source }
+        lock.lock()
+        let overlay = image
+        lock.unlock()
+        guard let overlay else { return source }
         return overlay.composited(over: source).cropped(to: source.extent)
     }
 }

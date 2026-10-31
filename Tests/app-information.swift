@@ -3,8 +3,8 @@ import Foundation
 @main
 enum AppInformationTests {
     static func main() {
-        assert(AppInformation.version(in: ["CFBundleShortVersionString": "1.2", "CFBundleVersion": "7"]) == "1.2（7）")
-        assert(AppInformation.version(in: [:]) == "未知（未知）")
+        assert(AppInformation.version(in: ["CFBundleShortVersionString": "1.2", "CFBundleVersion": "7"]) == "1.2 (7)")
+        assert(AppInformation.version(in: [:]) == "Unknown (Unknown)")
         assert(AppInformation.updateURL(in: [:]).absoluteString == "https://auv.macseek.cc/updates/")
         assert(AppInformation.updateURL(in: ["PlugLitAppStoreID": "123456"]).absoluteString == "https://apps.apple.com/app/id123456")
         assert(AppInformation.updateURL(in: ["PlugLitAppStoreID": "123/evil"]).host == "auv.macseek.cc")

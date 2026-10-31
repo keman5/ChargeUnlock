@@ -27,16 +27,18 @@ case "$MODE" in
   clear_caches
   TMP="$(mktemp -d "$CACHE/check.XXXXXX")"
   trap 'rm -rf "$TMP"; cleanup' EXIT
-  xcrun swiftc -swift-version 6 -parse-as-library "$ROOT/iOS/ChargingPolicy.swift" "$ROOT/Tests/ios-policy.swift" -o "$TMP/ios-policy"
+  xcrun swiftc -swift-version 6 -parse-as-library "$ROOT/iOS/Localization.swift" "$ROOT/iOS/ChargingPolicy.swift" "$ROOT/Tests/ios-policy.swift" -o "$TMP/ios-policy"
   "$TMP/ios-policy"
   xcrun swiftc -swift-version 6 -parse-as-library "$ROOT/iOS/BatteryOverlay.swift" "$ROOT/Tests/battery-overlay.swift" -o "$TMP/battery-overlay"
   "$TMP/battery-overlay"
-  xcrun swiftc -swift-version 6 -parse-as-library "$ROOT/iOS/AppInformation.swift" "$ROOT/Tests/app-information.swift" -o "$TMP/app-information"
+  xcrun swiftc -swift-version 6 -parse-as-library "$ROOT/iOS/Localization.swift" "$ROOT/iOS/AppInformation.swift" "$ROOT/Tests/app-information.swift" -o "$TMP/app-information"
   "$TMP/app-information"
   xcrun swiftc -swift-version 6 -parse-as-library "$ROOT/iOS/DiagnosticReport.swift" "$ROOT/Tests/diagnostics.swift" -o "$TMP/diagnostics"
   "$TMP/diagnostics"
+  xcrun swiftc -swift-version 6 -parse-as-library "$ROOT/Tests/localization.swift" -o "$TMP/localization"
+  "$TMP/localization" "$ROOT/iOS"
   ;;
- ios|ios-install)
+ ios|ios-install|ios-legacy-install)
   DEVICE="${2:?device UDID required}"
   TEAM="${3:?Apple development team required}"
   [[ "$DEVICE" =~ ^[A-Fa-f0-9-]{24,40}$ && "$TEAM" =~ ^[A-Z0-9]{10}$ ]] || { echo 'Invalid device or team'; exit 2; }
@@ -54,6 +56,8 @@ case "$MODE" in
   if [[ "$MODE" == ios-install ]]; then
     xcrun devicectl device install app --device "$DEVICE" "$APP"
     xcrun devicectl device process launch --device "$DEVICE" local.chargeunlock.ios
+  elif [[ "$MODE" == ios-legacy-install ]]; then
+    ios-deploy --id "$DEVICE" --bundle "$APP" --timeout 30
   fi
   ;;
  simulator|simulator-install)
@@ -78,8 +82,8 @@ case "$MODE" in
   clear_caches
   "$ROOT/website/build.sh" "${MODE#website}"
   ;;
- appstore-check|appstore-archive|appstore-upload|appstore-screenshots)
+ appstore-check|appstore-archive|appstore-upload|appstore-screenshots|appstore-shot-assets|appstore-shot-upload)
   "$ROOT/release/build.sh" "$@"
   ;;
- *) echo 'Usage: ./build.sh [test|simulator|simulator-install UDID|ios DEVICE TEAM|ios-install DEVICE TEAM|feedback-network-check|website|website-deploy|appstore-check|appstore-archive|appstore-upload|appstore-screenshots UDID|xcode-install XIP_PATH]' >&2; exit 2 ;;
+ *) echo 'Usage: ./build.sh [test|simulator|simulator-install UDID|ios DEVICE TEAM|ios-install DEVICE TEAM|ios-legacy-install DEVICE TEAM|feedback-network-check|website|website-deploy|appstore-check|appstore-archive|appstore-upload|appstore-screenshots UDID|appstore-shot-assets|appstore-shot-upload|xcode-install XIP_PATH]' >&2; exit 2 ;;
 esac

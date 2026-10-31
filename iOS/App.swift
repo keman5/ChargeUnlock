@@ -7,7 +7,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
         _ = PlaybackController.shared
         Diagnostics.record("app_launched")
-        ChargingShortcuts.updateAppShortcutParameters()
+        if #available(iOS 17.0, *) { ChargingShortcuts.updateAppShortcutParameters() }
         return true
     }
 }
@@ -71,19 +71,19 @@ final class MainViewController: UIViewController {
             stack.widthAnchor.constraint(equalTo: scroll.frameLayoutGuide.widthAnchor, constant: -48)
         ])
         let title = UILabel()
-        title.text = "电亮"
+        title.text = L("PlugLit")
         title.font = .preferredFont(forTextStyle: .largeTitle)
         title.adjustsFontForContentSizeCategory = true
         title.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         let header = UIStackView(arrangedSubviews: [title,
-            headerButton(symbol: "info.circle", label: "关于电亮", identifier: "openAbout", action: #selector(showAbout)),
-            headerButton(symbol: "book.closed", label: "自动化设置与使用指南", identifier: "openGuide", action: #selector(showGuide))])
+            headerButton(symbol: "info.circle", label: L("About PlugLit"), identifier: "openAbout", action: #selector(showAbout)),
+            headerButton(symbol: "book.closed", label: L("Automation & user guide"), identifier: "openGuide", action: #selector(showGuide))])
         header.alignment = .center
         header.spacing = 8
         stack.addArrangedSubview(header)
         stack.setCustomSpacing(6, after: header)
         let subtitle = UILabel()
-        subtitle.text = "PlugLit · 插上电，让屏幕亮着"
+        subtitle.text = L("Plug in. Keep your screen awake.")
         subtitle.font = .preferredFont(forTextStyle: .subheadline)
         subtitle.adjustsFontForContentSizeCategory = true
         subtitle.numberOfLines = 0
@@ -144,7 +144,7 @@ final class MainViewController: UIViewController {
         toggle.addTarget(self, action: #selector(toggleCharging), for: .touchUpInside)
         toggle.accessibilityIdentifier = "toggleCharging"
         stack.addArrangedSubview(toggle)
-        stack.addArrangedSubview(instructionCard(symbol: "hand.pinch", title: "画中画太大？", body: "双指捏合即可缩放，再拖到合适角落。电亮会沿用 iOS 记住的窗口尺寸。"))
+        stack.addArrangedSubview(instructionCard(symbol: "hand.pinch", title: L("PiP window too large?"), body: L("Pinch to resize, then drag to a corner. PlugLit uses the window size remembered by iOS.")))
         controller.onChange = { [weak self] in self?.refresh() }
         refresh()
     }
@@ -163,7 +163,7 @@ final class MainViewController: UIViewController {
             case "guide": showGuide()
             case "privacy", "terms":
                 let privacy = ProcessInfo.processInfo.arguments[index + 1] == "privacy"
-                present(UINavigationController(rootViewController: InformationTextViewController(title: privacy ? "隐私政策" : "使用条款", text: privacy ? AppInformation.privacy : AppInformation.terms)), animated: false)
+                present(UINavigationController(rootViewController: InformationTextViewController(title: privacy ? L("Privacy Policy") : L("Terms of Use"), text: privacy ? AppInformation.privacy : AppInformation.terms)), animated: false)
             default: break
             }
             return
@@ -180,24 +180,24 @@ final class MainViewController: UIViewController {
         controller.layer.isHidden = !playingInline
         cardContent.isHidden = playingInline
         if controller.policy.stopping {
-            cardTitle.text = "正在结束亮屏"
-            cardDetail.text = "正在关闭画中画，请稍候。"
+            cardTitle.text = L("Stopping Keep Awake")
+            cardDetail.text = L("Closing Picture in Picture. Please wait.")
         } else if controller.active {
-            cardTitle.text = "充电亮屏中"
-            cardDetail.text = "\(controller.batteryText) · 可切换到其他 App\n拔掉电源后自动结束"
+            cardTitle.text = L("Keeping screen awake")
+            cardDetail.text = L("%@ · Switch to any app\nStops when unplugged", controller.batteryText)
         } else if controller.policy.requested {
-            cardTitle.text = "正在准备充电画面"
-            cardDetail.text = "\(controller.batteryText) · 画中画即将开启"
+            cardTitle.text = L("Preparing charging display")
+            cardDetail.text = L("%@ · PiP is starting", controller.batteryText)
         } else {
-            cardTitle.text = controller.powered ? "已就绪，随时点亮" : "等待连接电源"
-            cardDetail.text = "\(controller.batteryText) · 当前按系统设置自动锁屏\n\(controller.powered ? "点下方按钮开启充电亮屏" : "连接电源后即可开启充电亮屏")"
+            cardTitle.text = controller.powered ? L("Ready to keep awake") : L("Waiting for power")
+            cardDetail.text = L("%@ · Your Auto-Lock settings apply\n%@", controller.batteryText, controller.powered ? L("Tap below to keep the screen awake") : L("Connect power to enable Keep Awake"))
         }
         let canStop = controller.policy.requested || controller.active
-        toggle.configuration?.title = controller.policy.stopping ? "正在停止…" : canStop ? "停止充电亮屏" : "开启充电亮屏"
+        toggle.configuration?.title = controller.policy.stopping ? L("Stopping…") : canStop ? L("Stop Keep Awake") : L("Start Keep Awake")
         toggle.configuration?.image = UIImage(systemName: canStop ? "stop.fill" : "bolt.fill")
         toggle.configuration?.showsActivityIndicator = controller.policy.stopping
         toggle.isEnabled = !controller.policy.stopping && (canStop || controller.powered)
-        toggle.accessibilityValue = controller.policy.stopping ? "正在停止" : canStop ? "已开启" : "已关闭"
+        toggle.accessibilityValue = controller.policy.stopping ? L("Stopping") : canStop ? L("On") : L("Off")
     }
     @objc private func toggleCharging() {
         guard !controller.policy.stopping else { return }

@@ -13,7 +13,7 @@ final class FeedbackViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = "问题反馈"
+        title = L("Feedback")
         view.backgroundColor = .systemGroupedBackground
         let scroll = UIScrollView()
         let stack = UIStackView()
@@ -32,35 +32,35 @@ final class FeedbackViewController: UIViewController {
             stack.bottomAnchor.constraint(equalTo: scroll.contentLayoutGuide.bottomAnchor, constant: -24),
             stack.widthAnchor.constraint(equalTo: scroll.frameLayoutGuide.widthAnchor, constant: -40)
         ])
-        stack.addArrangedSubview(label("请描述问题、操作步骤和发生时间（至少 10 字，最多 4,000 字）。不要填写密码或其他敏感信息。"))
+        stack.addArrangedSubview(label(L("Describe the issue, steps and time (10–4,000 characters). Do not include passwords or sensitive information.")))
         details.font = .preferredFont(forTextStyle: .body)
         details.adjustsFontForContentSizeCategory = true
         details.backgroundColor = .secondarySystemGroupedBackground
         details.layer.cornerRadius = 12
-        details.accessibilityLabel = "问题描述"
+        details.accessibilityLabel = L("Describe the issue")
         details.heightAnchor.constraint(equalToConstant: 150).isActive = true
         stack.addArrangedSubview(details)
         contact.borderStyle = .roundedRect
-        contact.placeholder = "联系邮箱（选填，用于回复）"
-        contact.accessibilityLabel = "联系邮箱，选填"
+        contact.placeholder = L("Email for replies (optional)")
+        contact.accessibilityLabel = L("Contact email, optional")
         contact.keyboardType = .emailAddress
         contact.textContentType = .emailAddress
         contact.autocapitalizationType = .none
         contact.autocorrectionType = .no
         stack.addArrangedSubview(contact)
-        stack.addArrangedSubview(toggleRow("附带诊断报告（可选）", control: includeDiagnostics))
-        stack.addArrangedSubview(label("报告自动读取机型标识、iOS / 应用版本、电量、省电与温度状态及最近 7 天内最多 200 条运行事件。不包含设备名称、唯一设备标识、照片或其他应用内容。默认仅保存在本机。"))
-        stack.addArrangedSubview(button("预览与导出诊断报告", action: #selector(preview)))
-        stack.addArrangedSubview(button("清空本地诊断日志", action: #selector(clear)))
-        stack.addArrangedSubview(button("查看隐私政策", action: #selector(privacy)))
-        stack.addArrangedSubview(toggleRow("同意将本次反馈发送至官网", control: consent))
-        stack.addArrangedSubview(label("仅点击提交后才发送到 auv.macseek.cc。反馈保留 30 天，到期后在下一次每小时清理任务中删除；服务器可能位于境外，网络服务商会处理连接 IP。若不愿上传，可只导出到本机。修改任何内容后重试将作为新的反馈。"))
+        stack.addArrangedSubview(toggleRow(L("Include diagnostics (optional)"), control: includeDiagnostics))
+        stack.addArrangedSubview(label(L("The report includes model identifier, iOS/app version, battery, low-power and thermal state, and up to 200 events from the last 7 days. It excludes device name, unique identifiers, photos and other apps’ content. Stored only on this device by default.")))
+        stack.addArrangedSubview(button(L("Preview & export diagnostics"), action: #selector(preview)))
+        stack.addArrangedSubview(button(L("Clear local diagnostics"), action: #selector(clear)))
+        stack.addArrangedSubview(button(L("Read Privacy Policy"), action: #selector(privacy)))
+        stack.addArrangedSubview(toggleRow(L("I agree to send this feedback to the website"), control: consent))
+        stack.addArrangedSubview(label(L("Sent to auv.macseek.cc only when you submit. Feedback is kept for 30 days, then deleted by the next hourly cleanup. Servers may be abroad; the network provider processes your connection IP. You can export locally instead. Editing any content before retrying creates new feedback.")))
         submit.configuration = .filled()
-        submit.configuration?.title = "提交反馈"
+        submit.configuration?.title = L("Send feedback")
         submit.addTarget(self, action: #selector(send), for: .touchUpInside)
         submit.heightAnchor.constraint(greaterThanOrEqualToConstant: 48).isActive = true
         stack.addArrangedSubview(submit)
-        stack.addArrangedSubview(button("在官网反馈", action: #selector(website)))
+        stack.addArrangedSubview(button(L("Feedback on the website"), action: #selector(website)))
     }
 
     private func label(_ text: String) -> UILabel {
@@ -92,24 +92,24 @@ final class FeedbackViewController: UIViewController {
         do {
             let data = try Diagnostics.report().data()
             navigationController?.pushViewController(DiagnosticPreviewController(data: data), animated: true)
-        } catch { notice("无法读取诊断日志", "日志可能已损坏或暂时无法访问。可以清空后重新复现问题；仍可不附带日志提交反馈。") }
+        } catch { notice(L("Unable to read diagnostics"), L("Logs may be damaged or unavailable. Clear them and reproduce the issue, or send feedback without logs.")) }
     }
     @objc private func clear() {
-        let alert = UIAlertController(title: "清空本地诊断？", message: "这会删除本应用保存的诊断日志，不会修改快捷指令或已提交的反馈。", preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "取消", style: .cancel))
-        alert.addAction(UIAlertAction(title: "清空", style: .destructive) { [weak self] _ in
+        let alert = UIAlertController(title: L("Clear local diagnostics?"), message: L("This deletes this app’s local diagnostics. Shortcuts and submitted feedback are unchanged."), preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: L("Cancel"), style: .cancel))
+        alert.addAction(UIAlertAction(title: L("Clear"), style: .destructive) { [weak self] _ in
             do {
                 try Diagnostics.clear()
                 self?.pendingBody = nil
                 self?.pendingForm = nil
-                self?.notice("已清空", "后续运行将重新记录必要事件。")
+                self?.notice(L("Cleared"), L("Necessary events will be recorded again as you use the app."))
             }
-            catch { self?.notice("清空失败", "请稍后重试。") }
+            catch { self?.notice(L("Unable to clear"), L("Please try again later.")) }
         })
         present(alert, animated: true)
     }
     @objc private func privacy() {
-        navigationController?.pushViewController(InformationTextViewController(title: "隐私政策", text: AppInformation.privacy), animated: true)
+        navigationController?.pushViewController(InformationTextViewController(title: L("Privacy Policy"), text: AppInformation.privacy), animated: true)
     }
     @objc private func website() { UIApplication.shared.open(AppInformation.website.appendingPathComponent("feedback/")) }
 
@@ -118,14 +118,14 @@ final class FeedbackViewController: UIViewController {
         let description = details.text.trimmingCharacters(in: .whitespacesAndNewlines)
         let email = (contact.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         guard description.count >= 10, description.count <= 4_000, email.count <= 254 else {
-            notice("请检查内容", "问题描述需要 10–4,000 字；邮箱不能超过 254 字。")
+            notice(L("Check your message"), L("Use 10–4,000 characters for the issue and no more than 254 for email."))
             return
         }
         guard email.isEmpty || (email.contains("@") && !email.contains(where: { $0.isWhitespace })) else {
-            notice("请检查邮箱", "请输入有效的联系邮箱，或留空。")
+            notice(L("Check your email"), L("Enter a valid email address or leave it blank."))
             return
         }
-        guard consent.isOn else { notice("尚未同意上传", "请先阅读隐私政策，并打开本次反馈上传同意开关。"); return }
+        guard consent.isOn else { notice(L("Consent required"), L("Read the Privacy Policy and enable consent for this submission.")); return }
         do {
             struct Feedback: Encodable {
                 let message: String
@@ -171,8 +171,8 @@ final class FeedbackViewController: UIViewController {
                     let (data, response) = try await URLSession.shared.data(for: request)
                     guard let http = response as? HTTPURLResponse else { throw URLError(.badServerResponse) }
                     guard http.statusCode == 201 else {
-                        let reason = http.statusCode == 429 ? "提交过于频繁，请一分钟后重试。" : "官网暂未接收成功（HTTP \(http.statusCode)）。内容已保留，可稍后重试或先导出日志。"
-                        notice("反馈未提交", reason)
+                        let reason = http.statusCode == 429 ? L("Too many requests. Try again in one minute.") : L("Website did not accept the request (HTTP %lld). Your text is saved. Retry later or export logs first.", Int64(http.statusCode))
+                        notice(L("Feedback not sent"), reason)
                         return
                     }
                     struct Receipt: Decodable { let id: String }
@@ -181,14 +181,14 @@ final class FeedbackViewController: UIViewController {
                     details.text = ""
                     consent.isOn = false
                     pendingBody = nil
-                    notice("反馈已收到", "编号：\(receipt.id)\n请保存编号，查询或申请删除反馈时使用。")
-                } catch { notice("发送失败", "请检查网络后重试。输入内容已保留，未确认官网是否收到。") }
+                    notice(L("Feedback received"), L("Reference: %@\nSave this reference to ask about or delete your feedback.", receipt.id))
+                } catch { notice(L("Send failed"), L("Check your connection and retry. Your text is saved; receipt by the website is unconfirmed.")) }
             }
-        } catch { notice("无法生成报告", "可以关闭附带诊断报告后提交，或清空日志并重新复现问题。") }
+        } catch { notice(L("Unable to create report"), L("Send without diagnostics, or clear logs and reproduce the issue.")) }
     }
     private func notice(_ title: String, _ message: String) {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "知道了", style: .default))
+        alert.addAction(UIAlertAction(title: L("OK"), style: .default))
         present(alert, animated: true)
     }
 }
@@ -196,7 +196,7 @@ final class FeedbackViewController: UIViewController {
 @MainActor
 private final class DiagnosticPreviewController: UIViewController {
     private let data: Data
-    init(data: Data) { self.data = data; super.init(nibName: nil, bundle: nil); title = "诊断报告预览" }
+    init(data: Data) { self.data = data; super.init(nibName: nil, bundle: nil); title = L("Diagnostic report") }
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
     override func loadView() {
         let text = UITextView()
@@ -205,7 +205,7 @@ private final class DiagnosticPreviewController: UIViewController {
         text.adjustsFontForContentSizeCategory = true
         text.text = String(decoding: data, as: UTF8.self)
         view = text
-        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "导出", style: .plain, target: self, action: #selector(exportReport))
+        navigationItem.rightBarButtonItem = UIBarButtonItem(title: L("Export"), style: .plain, target: self, action: #selector(exportReport))
     }
     @objc private func exportReport() {
         do {
@@ -214,8 +214,8 @@ private final class DiagnosticPreviewController: UIViewController {
             share.popoverPresentationController?.barButtonItem = navigationItem.rightBarButtonItem
             present(share, animated: true)
         } catch {
-            let alert = UIAlertController(title: "导出失败", message: "无法写入诊断文件，请检查剩余存储空间后重试。", preferredStyle: .alert)
-            alert.addAction(UIAlertAction(title: "知道了", style: .default))
+            let alert = UIAlertController(title: L("Export failed"), message: L("Unable to write the diagnostic file. Check free storage and retry."), preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: L("OK"), style: .default))
             present(alert, animated: true)
         }
     }

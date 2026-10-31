@@ -7,13 +7,13 @@ final class AboutViewController: UITableViewController {
 
         var title: String {
             switch self {
-            case .version: "版本号"
-            case .update: "检查更新"
-            case .feedback: "问题反馈与诊断"
-            case .website: "官方网站"
-            case .apps: "更多应用"
-            case .privacy: "隐私政策"
-            case .terms: "使用条款"
+            case .version: L("Version")
+            case .update: L("Check for updates")
+            case .feedback: L("Feedback & diagnostics")
+            case .website: L("Website")
+            case .apps: L("More apps")
+            case .privacy: L("Privacy Policy")
+            case .terms: L("Terms of Use")
             }
         }
         var symbol: String {
@@ -44,8 +44,8 @@ final class AboutViewController: UITableViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = "关于电亮"
-        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "完成", style: .done, target: self, action: #selector(close))
+        title = L("About PlugLit")
+        navigationItem.rightBarButtonItem = UIBarButtonItem(title: L("Done"), style: .done, target: self, action: #selector(close))
         tableView.rowHeight = UITableView.automaticDimension
         tableView.estimatedRowHeight = 64
         tableView.sectionHeaderHeight = UITableView.automaticDimension
@@ -54,7 +54,7 @@ final class AboutViewController: UITableViewController {
     override func numberOfSections(in tableView: UITableView) -> Int { sections.count }
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int { sections[section].count }
     override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        ["电亮 PlugLit", "发现", "隐私与条款"][section]
+        [L("about.brand"), L("Discover"), L("Privacy & terms")][section]
     }
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let item = sections[indexPath.section][indexPath.row]
@@ -71,7 +71,7 @@ final class AboutViewController: UITableViewController {
             content.secondaryText = AppInformation.version(in: info)
         } else if let key = item.linkKey {
             if item != .update && AppInformation.url(for: key, in: info) == nil {
-                content.secondaryText = "暂未提供"
+                content.secondaryText = L("Not available")
             }
         }
         cell.contentConfiguration = content
@@ -95,14 +95,12 @@ final class AboutViewController: UITableViewController {
         }
         if let key = item.linkKey {
             guard let url = AppInformation.url(for: key, in: info) else {
-                notice(item.title, message: item == .update
-                    ? "当前版本为 \(AppInformation.version(in: info))。尚未接入更新渠道，暂时无法检查新版本，请通过原安装渠道获取更新。"
-                    : "暂未提供\(item.title)地址。")
+                notice(item.title, message: L("No address is available for %@.", item.title))
                 return
             }
             UIApplication.shared.open(url, options: [:]) { [weak self] success in
                 guard !success else { return }
-                Task { @MainActor in self?.notice("无法打开页面", message: "请稍后重试，或检查设备是否允许打开外部链接。") }
+                Task { @MainActor in self?.notice(L("Unable to open page"), message: L("Try again later, or check whether your device allows external links.")) }
             }
         } else {
             navigationController?.pushViewController(InformationTextViewController(title: item.title, text: item == .privacy ? AppInformation.privacy : AppInformation.terms), animated: true)
@@ -110,7 +108,7 @@ final class AboutViewController: UITableViewController {
     }
     private func notice(_ title: String, message: String) {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "知道了", style: .default))
+        alert.addAction(UIAlertAction(title: L("OK"), style: .default))
         present(alert, animated: true)
     }
     @objc private func close() { dismiss(animated: true) }
@@ -137,9 +135,6 @@ final class InformationTextViewController: UIViewController {
         textView.textContainerInset = UIEdgeInsets(top: 24, left: 0, bottom: 40, right: 0)
         textView.accessibilityIdentifier = "informationDocument"
         renderText()
-        registerForTraitChanges([UITraitPreferredContentSizeCategory.self]) { (controller: InformationTextViewController, _: UITraitCollection) in
-            controller.renderText()
-        }
         textView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(textView)
         NSLayoutConstraint.activate([
@@ -148,6 +143,13 @@ final class InformationTextViewController: UIViewController {
             textView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             textView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
         ])
+    }
+
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        if previousTraitCollection?.preferredContentSizeCategory != traitCollection.preferredContentSizeCategory {
+            renderText()
+        }
     }
 
     private func renderText() {

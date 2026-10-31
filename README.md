@@ -6,7 +6,7 @@
 
 原 ChargeUnlock iOS 版现改名为“电亮”，英文名 PlugLit。保留原 bundle ID、AppIntent 类型及 `chargeunlock://start` / `stop` 地址以兼容已有安装；另支持 `pluglit://start` / `stop`。
 
-支持 iOS 17 及以上，通过系统画中画播放本地无声充电动画。无需 Mac 持续连接。首次普通打开自动展示图文步骤指南；首页“自动化设置与使用指南”可反复查看。停止状态显示电量、连接状态和系统锁屏说明，不留空白卡片。
+支持 iOS 15 及以上（快捷动作需要 iOS 17 及以上），通过系统画中画播放本地无声充电动画。无需 Mac 持续连接。首次普通打开自动展示图文步骤指南；首页“自动化设置与使用指南”可反复查看。停止状态显示电量、连接状态和系统锁屏说明，不留空白卡片。
 
 ```sh
 ./build.sh ios-install DEVICE_UDID TEAM_ID

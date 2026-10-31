@@ -4,7 +4,7 @@ import os
 @MainActor
 enum Diagnostics {
     private static let logger = Logger(subsystem: "local.chargeunlock.ios", category: "diagnostics")
-    private static let store = DiagnosticStore(file: URL.applicationSupportDirectory.appendingPathComponent("Diagnostics/events.json"))
+    private static let store = DiagnosticStore(file: FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("Diagnostics/events.json"))
     private static var lastState: DiagnosticState?
 
     static func state() -> DiagnosticState {
@@ -39,15 +39,15 @@ enum Diagnostics {
 
     static func clear() throws {
         try store.clear()
-        let legacy = URL.documentsDirectory.appendingPathComponent("status.json")
+        let legacy = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("status.json")
         if FileManager.default.fileExists(atPath: legacy.path) { try FileManager.default.removeItem(at: legacy) }
-        let exports = URL.temporaryDirectory.appendingPathComponent("PlugLitDiagnostics")
+        let exports = FileManager.default.temporaryDirectory.appendingPathComponent("PlugLitDiagnostics")
         if FileManager.default.fileExists(atPath: exports.path) { try FileManager.default.removeItem(at: exports) }
         lastState = nil
     }
 
     static func export(_ data: Data) throws -> URL {
-        let directory = URL.temporaryDirectory.appendingPathComponent("PlugLitDiagnostics")
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("PlugLitDiagnostics")
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let url = directory.appendingPathComponent("PlugLit-diagnostics.json")
         try data.write(to: url, options: [.atomic, .completeFileProtection])

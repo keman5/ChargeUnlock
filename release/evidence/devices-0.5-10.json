@@ -1,0 +1,25 @@
+{
+  "version": "0.5",
+  "build": "10",
+  "minimumOSVersion": "15.0",
+  "xcodeBuild": "27A9275",
+  "sdk": "iphoneos27.1",
+  "iPhone7Plus": {
+    "os": "15.8.7",
+    "installation": "success",
+    "bundleExists": true,
+    "pip": "user_confirmed_success",
+    "automaticLaunch": "unavailable_missing_iOS15_DeveloperDiskImage"
+  },
+  "iPhone17": {
+    "installation": "success",
+    "launch": "success",
+    "aboutVersion": "0.5（10）",
+    "pipStartStashStop": "observed",
+    "screenshots": [
+      "release/screenshots/0.5/iphone17/01-main.png",
+      "release/screenshots/0.5/iphone17/02-pip-stashed.png"
+    ]
+  },
+  "fullUnplugAutoLockRegression": false
+}

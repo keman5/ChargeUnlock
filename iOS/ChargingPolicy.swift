@@ -2,7 +2,7 @@ import Foundation
 
 enum BatteryReading {
     static func percentageText(_ level: Float) -> String {
-        guard level.isFinite, (0...1).contains(level) else { return "电量未知" }
+        guard level.isFinite, (0...1).contains(level) else { return L("Battery unknown") }
         return "\(Int((level * 100).rounded()))%"
     }
 }

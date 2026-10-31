@@ -39,13 +39,21 @@ final class GuideViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = "电亮使用指南"
+        title = L("PlugLit guide")
         view.backgroundColor = .systemGroupedBackground
-        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "完成", style: .done, target: self, action: #selector(close))
+        navigationItem.rightBarButtonItem = UIBarButtonItem(title: L("Done"), style: .done, target: self, action: #selector(close))
         navigationItem.rightBarButtonItem?.accessibilityIdentifier = "closeGuide"
         let scroll = UIScrollView()
         scroll.translatesAutoresizingMaskIntoConstraints = false
-        let shortcuts = ShortcutsUIButton(style: .automatic)
+        let shortcuts: UIButton
+        if #available(iOS 17.0, *) {
+            shortcuts = ShortcutsUIButton(style: .automatic)
+        } else {
+            shortcuts = UIButton(type: .system)
+            shortcuts.configuration = .filled()
+            shortcuts.configuration?.title = L("Back to start Keep Awake")
+            shortcuts.addTarget(self, action: #selector(close), for: .touchUpInside)
+        }
         shortcuts.accessibilityIdentifier = "openShortcuts"
         shortcuts.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(scroll)
@@ -70,11 +78,11 @@ final class GuideViewController: UIViewController {
             stack.bottomAnchor.constraint(equalTo: scroll.contentLayoutGuide.bottomAnchor, constant: -20),
             stack.widthAnchor.constraint(equalTo: scroll.frameLayoutGuide.widthAnchor, constant: -40)
         ])
-        stack.addArrangedSubview(heading("插上电，让屏幕亮着"))
+        stack.addArrangedSubview(heading(L("Plug in. Stay awake.")))
         let steps = UIStackView()
         steps.distribution = .fillEqually
         steps.spacing = 8
-        for (symbol, caption) in [("powerplug.fill", "1 连接电源"), ("pip.enter", "2 开启亮屏"), ("apps.iphone", "3 切换 App")] {
+        for (symbol, caption) in [("powerplug.fill", L("1 Plug in")), ("pip.enter", L("2 Start")), ("apps.iphone", L("3 Switch apps"))] {
             let icon = UIImageView(image: UIImage(systemName: symbol, withConfiguration: UIImage.SymbolConfiguration(pointSize: 30, weight: .medium)))
             icon.contentMode = .scaleAspectFit
             icon.heightAnchor.constraint(equalToConstant: 44).isActive = true
@@ -91,36 +99,42 @@ final class GuideViewController: UIViewController {
             steps.addArrangedSubview(step)
         }
         stack.addArrangedSubview(steps)
-        stack.addArrangedSubview(instructionCard(symbol: "hand.pinch", title: "捏小一点，少挡一点", body: "双指捏合缩放画中画，拖动调整位置。电亮会沿用 iOS 记住的尺寸。收起到边缘后，请确认手机是否仍保持亮屏。"))
-        stack.addArrangedSubview(heading("插拔电源，自动切换"))
-        let path = UILabel()
-        path.text = "打开「快捷指令」→ 自动化 → ＋ → 充电器\n分别建立下面两条规则，均选择「立即运行」。"
-        path.font = .preferredFont(forTextStyle: .subheadline)
-        path.adjustsFontForContentSizeCategory = true
-        path.textColor = .secondaryLabel
-        path.numberOfLines = 0
-        stack.addArrangedSubview(path)
-        stack.addArrangedSubview(instructionCard(symbol: "bolt.circle.fill", title: "插电 → 开启", body: "已连接 → 立即运行\n添加电亮的「开启充电亮屏」"))
-        stack.addArrangedSubview(instructionCard(symbol: "stop.circle", title: "拔电 → 停止", body: "已断开 → 立即运行\n添加电亮的「停止充电亮屏」"))
-        stack.addArrangedSubview(instructionCard(symbol: "checkmark.circle", title: "最后，拔插一次试试", body: "解锁手机后测试：插电出现画中画，拔电关闭。随后按原来的时间锁屏，不会立即熄屏。无需 Mac 或测试助手。"))
+        stack.addArrangedSubview(instructionCard(symbol: "hand.pinch", title: L("Smaller window, more space"), body: L("Pinch to resize PiP and drag to move it. PlugLit uses the size remembered by iOS. If you hide it at the edge, check that your screen stays awake.")))
+        if #available(iOS 17.0, *) {
+            stack.addArrangedSubview(heading(L("Automate when power changes")))
+            let path = UILabel()
+            path.text = L("Open Shortcuts → Automation → + → Charger.\nCreate both rules below and choose Run Immediately for each.")
+            path.font = .preferredFont(forTextStyle: .subheadline)
+            path.adjustsFontForContentSizeCategory = true
+            path.textColor = .secondaryLabel
+            path.numberOfLines = 0
+            stack.addArrangedSubview(path)
+            stack.addArrangedSubview(instructionCard(symbol: "bolt.circle.fill", title: L("Plug in → Start"), body: L("Is Connected → Run Immediately\nAdd PlugLit’s “Start Keep Awake”.")))
+            stack.addArrangedSubview(instructionCard(symbol: "stop.circle", title: L("Unplug → Stop"), body: L("Is Disconnected → Run Immediately\nAdd PlugLit’s “Stop Keep Awake”.")))
+            stack.addArrangedSubview(instructionCard(symbol: "checkmark.circle", title: L("Finally, test both rules"), body: L("Test with the phone unlocked: plug in to start PiP, unplug to stop. Auto-Lock follows your usual delay, not immediately. No Mac or testing helper needed.")))
+        } else {
+            stack.addArrangedSubview(instructionCard(symbol: "hand.tap", title: L("Start manually from Home"), body: L("Plug in, tap Start Keep Awake on Home, then return to the Home Screen. Unplug or tap Stop to end playback. Shortcut actions require iOS 17 or later.")))
+        }
         detailsButton.configuration = .plain()
-        detailsButton.configuration?.title = "常见问题与停用方法"
+        detailsButton.configuration?.title = L("FAQ & turning off")
         detailsButton.configuration?.image = UIImage(systemName: "chevron.down")
         detailsButton.configuration?.imagePadding = 8
         detailsButton.configuration?.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 4, bottom: 12, trailing: 4)
         detailsButton.heightAnchor.constraint(greaterThanOrEqualToConstant: 44).isActive = true
         detailsButton.contentHorizontalAlignment = .leading
         detailsButton.accessibilityIdentifier = "guideDetails"
-        detailsButton.accessibilityValue = "已折叠"
+        detailsButton.accessibilityValue = L("Collapsed")
         detailsButton.addTarget(self, action: #selector(toggleDetails), for: .touchUpInside)
         stack.addArrangedSubview(detailsButton)
         details.axis = .vertical
         details.spacing = 12
         details.isHidden = true
-        details.addArrangedSubview(instructionCard(symbol: "magnifyingglass", title: "找不到快捷动作？", body: "先打开一次电亮，再重开快捷指令。新建空白自动化后，搜索「电亮」添加动作；系统入口可能因版本不同而变化。两条规则需分别保存，App 无法代你创建或检查个人自动化。"))
-        details.addArrangedSubview(instructionCard(symbol: "lock", title: "亮屏的边界", body: "锁屏插电可能需要先解锁。暂停、关闭画中画或其他媒体打断，会结束亮屏；系统原设置为「永不」时，停止后也不会自动锁屏。iOS 不允许 App 自行调整画中画尺寸或位置。"))
-        details.addArrangedSubview(instructionCard(symbol: "battery.100percent", title: "电量与动画", body: "打开 App 立即刷新，前台及播放时每秒补查系统电量；系统读数可能略有延迟。闪电自下而上填满，视频源为 60 fps，实际刷新率由 iOS 决定。"))
-        details.addArrangedSubview(instructionCard(symbol: "pause.circle", title: "暂停或卸载", body: "只停本次：点首页同一个按钮停止。\n暂停自动运行：在快捷指令里停用两条自动化。\n卸载前：停止亮屏，删除两条自动化，再删除电亮，避免遗留规则报错。"))
+        if #available(iOS 17.0, *) {
+            details.addArrangedSubview(instructionCard(symbol: "magnifyingglass", title: L("Can’t find the actions?"), body: L("Open PlugLit once, then reopen Shortcuts. Create a blank automation and search for PlugLit to add an action. Menus may vary by iOS version. Save each rule separately; the app cannot create or inspect personal automations for you.")))
+        }
+        details.addArrangedSubview(instructionCard(symbol: "lock", title: L("Keep Awake limitations"), body: L("Plugging in while locked may require unlocking first. Pausing, closing PiP or other media interruptions can end Keep Awake. If Auto-Lock is set to Never, stopping will not enable it. iOS does not let apps set PiP size or position.")))
+        details.addArrangedSubview(instructionCard(symbol: "battery.100percent", title: L("Battery & animation"), body: L("Battery refreshes on opening and is checked every second while foregrounded or playing. System readings may lag. The bolt fills upward; the video source is 60 fps, with actual refresh controlled by iOS.")))
+        details.addArrangedSubview(instructionCard(symbol: "pause.circle", title: L("Pause or uninstall"), body: L("Stop this session: tap the same button on Home.\nPause automatic starts: disable both automations in Shortcuts.\nBefore uninstalling: stop Keep Awake, delete both automations, then delete PlugLit to avoid broken rules.")))
         stack.addArrangedSubview(details)
     }
 
@@ -135,7 +149,7 @@ final class GuideViewController: UIViewController {
     @objc private func toggleDetails() {
         details.isHidden.toggle()
         detailsButton.configuration?.image = UIImage(systemName: details.isHidden ? "chevron.down" : "chevron.up")
-        detailsButton.accessibilityValue = details.isHidden ? "已折叠" : "已展开"
+        detailsButton.accessibilityValue = details.isHidden ? L("Collapsed") : L("Expanded")
     }
     @objc private func close() { dismiss(animated: true) }
 }

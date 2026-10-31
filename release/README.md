@@ -1,5 +1,35 @@
 # 电亮 PlugLit 发布
 
+## 商店介绍仅保留中英文（2026-10-31 10:04，Asia/Shanghai）
+
+- 用户要求商店介绍只保留简体中文和英文。等待审核时 Apple 禁止修改；撤回 submission `13b5dd25-a0a8-4f26-ba43-232a87d0f0ac` 后，成功删除 de-DE、es-ES、fr-FR、ja、ko 的 app-info 本地化并级联移除版本本地化。
+- 远端重新拉取确认 app-info 与 0.5 版本都仅有 `en-US`、`zh-Hans`，文案与本地一致。主要语言仍为 `en-US`，不支持的语言使用英文回退；App Store 最终展示根据用户语言偏好和店面规则选择，并非严格按国家强制。
+- 应用内七语言资源保持不变；本地商店元数据与截图上传循环只管理中英文。无需重新构建，沿用 VALID 构建 0.5（11）`330b8f90-8cb9-4a90-b36b-8594a6783e78`。
+- 提审验证零阻断，保留两项首发 whatsNew 警告。新 submission `e5abde5c-0b04-4eca-a155-9a72a110d967` 于 `2026-10-31T02:04:27.785Z` 提交并回读 `WAITING_FOR_REVIEW`；仍手动发布。回执 `release/evidence/submission-0.5-two-languages.json`，元数据变更回执 `release/evidence/metadata-0.5-two-languages.json`。
+
+## 0.5（11）多语言更新已提交审核（2026-10-31 09:50，Asia/Shanghai）
+
+- 应用全部用户文案覆盖 en、zh-Hans、es、fr、de、ja、ko：界面、无障碍标签、动态状态与错误、指南、反馈、隐私政策、条款及快捷动作。使用系统 Bundle 语言匹配，开发语言为英语；不支持的语言回退英语。诊断 JSON 字段保持稳定。
+- 每种语言 139 条 Localizable 文案，另有 AppShortcuts / InfoPlist 资源。七份商店介绍位于 `metadata/version/0.5/`，对应 app-info 同步。
+- 根 `./build.sh test` 验证目录完整性、占位符、快捷短语、区域语言匹配及英文本地化回退；Xcode 27.1 模拟器、真机 Debug 构建与 Release 归档导出通过，IPA 为 0.5（11）、DTXcodeBuild 27A9275。
+- iPhone 17 已覆盖安装 11，确认系统中文与英文启动、英文 PiP 电量字幕、开启 / 手动收起 / 停止；取图后退出本轮测试服务，重新正常启动应用以恢复系统语言。没有重新执行拔电后等待自动锁屏的完整测试。
+- 德语、日语指南及俄语回退英文已截图验证：`release/evidence/localization/`。英文指南/反馈/关于模拟器图位于 `release/screenshots/0.5/en-US/`。
+- 商店实际使用英文真机首页、播放画中画、边缘收起三张。保留原图 `release/screenshots/0.5/en-US-device/`；`./build.sh appstore-shot-assets` 等比缩放并补边生成 6.1 / 6.5 / 6.9 英寸尺寸，不伪造设备状态；`ASC_APP_ID=6828947154 ./build.sh appstore-shot-upload` 为全部七种商店语言替换英文图（并覆盖中文条目遗留的 6.1 英寸图），逐组 dry-run 后上传。
+- 旧 submission 0fd37d5d-3571-4de5-8c67-44ff712a7e20 已撤回。新构建 `330b8f90-8cb9-4a90-b36b-8594a6783e78` 为 VALID 并已关联 0.5；英文设为商店主要语言，七语言文案回读无差异，45 张英文截图均 COMPLETE 且校验值与本地一致。提审验证零阻断，仅七个首发不可填 whatsNew 警告。Apple 隐私页再次确认已发布；147 地区、排除 CHN / EU27、手动发布回读保持不变。
+- 上传脚本的 ASC 步骤已成功上传并关联；执行期间修改该脚本导致 Bash 尾部报 `-ipa: command not found`。没有重传 IPA；依据 ASC 成功回执和远端 VALID 构建确认完成，现有脚本通过 bash 语法检查。
+- Submission `13b5dd25-a0a8-4f26-ba43-232a87d0f0ac` 已于 `2026-10-31T01:50:00.422Z` 提交，状态回执见 `release/evidence/submission-0.5-11.json`。提交审核不等于获批或上架。
+- 翻译尚未经过七语言母语人员审校；外部支持网站仍是简体中文，已在审核备注明确。
+
+## 0.5（10）已提交审核（2026-10-31 08:50，Asia/Shanghai）
+
+- 7 Plus（iOS 15.8.7）与 iPhone 17 均已覆盖安装新版；用户确认 7 Plus 可开启画中画，iPhone 17 已实测开启、收起与停止，更新主界面和边缘收起截图。
+- 最低系统 iOS 15；快捷动作仍需 iOS 17+。旧设备入口：`./build.sh ios-legacy-install <UDID> B3ZTS6G82B`，不卸载、不清除应用数据。
+- Xcode 27.1 经根脚本归档导出并上传，构建 `2e5aa600-ab00-47a2-8ced-f788a2a02fc2` 为 VALID。版本记录沿用 `c4a77f54-19cc-4e67-8e81-e3e1b4c20904` 并改为 0.5；旧审核已取消。
+- 元数据：`metadata/version/0.5/zh-Hans.json`；真机原图及两组商店尺寸：`release/screenshots/0.5/`。147 地区、免费、手动发布策略保留，排除 CHN 与欧盟 27 国。
+- 两组截图均为 COMPLETE（各两张，主界面在前、收起画中画在后）；提审前 `asc validate --ipa` 零阻断，唯一 warning 为首发不可填写的 whatsNew。元数据 dry-run 无差异。
+- Submission `0fd37d5d-3571-4de5-8c67-44ff712a7e20` 于 `2026-10-31T00:50:50.161Z` 提交成功，回读 `WAITING_FOR_REVIEW`。回执：`release/evidence/submission-0.5-10.json`。提交审核不等于已批准或已上架。
+- 本轮手机测试服务及自身 caffeinate 断言均在任务结束释放；旧 Xcode 安装自动化保持暂停。以下 0.4.0 记录仅为历史。
+
 ## 已提交审核（2026-10-31 01:46，Asia/Shanghai）
 
 - Apple 官方下载的 Xcode 27.1 (27A9275) 已通过根 `build.sh xcode-install` 安装到 `/Applications/Xcode-27.1.app`；应用 Apple 签名与 Gatekeeper 检查通过，首次运行状态检查通过，系统 Xcode 选择仍是 `/Applications/Xcode.app/Contents/Developer`。
@@ -31,7 +61,7 @@
 - `./build.sh appstore-archive`：Release 归档、签名验证并导出 App Store IPA，产物位于 `~/Library/Caches/ChargeUnlock/Release/`。
 - `ASC_APP_ID=<真实AppID> ./build.sh appstore-upload`：先 dry-run，再上传并等待构建处理；**不自动发起审核**。
 
-App Store 元数据存于 `metadata/app-info` 与 `metadata/version/0.4.0`。审核电话只写入忽略的 `release/contact.local.json`，不公开在官网或仓库。
+App Store 当前元数据存于 `metadata/app-info` 与 `metadata/version/0.5`。审核电话只写入忽略的 `release/contact.local.json`，不公开在官网或仓库。
 
 ## 密钥是什么、如何提供
 

@@ -1,5 +1,29 @@
 # 电亮 PlugLit 发布验收 · 2026-10-31
 
+## 商店中英文收敛（2026-10-31 10:04，优先于以下历史记录）
+
+- 商店 app-info / 0.5 版本本地化仅保留 en-US、zh-Hans；Apple 端拉取文件与本地逐项一致，主要语言 en-US。应用内七语言不变。
+- 已撤回旧审核，移除五种其他商店本地化及其关联版本条目，更新截图上传循环为两种语言；bash 语法检查及 git diff --check 通过。
+- 沿用已处理构建 0.5（11），商店验证零阻断，保留两项首发 whatsNew 警告。新审核 `e5abde5c-0b04-4eca-a155-9a72a110d967` 回读 WAITING_FOR_REVIEW；保留手动发布。
+- 证据：`release/evidence/metadata-0.5-two-languages.json`、`release/evidence/validation-0.5-two-languages.json`、`release/evidence/submission-state-0.5-two-languages.json`。本轮无应用代码改动，未重新构建或运行真机测试。
+
+## 0.5（10）真机与发布验证
+
+- 最低系统降至 iOS 15.0；App Intents 与快捷指令入口限定 iOS 17+，旧系统使用首页手动开启。替换 iOS 16+ 锁与目录 API，并兼容旧版视频合成和动态字体更新。
+- Xcode 27.1 经根 `build.sh ios-legacy-install` 成功覆盖安装到 7 Plus（iOS 15.8.7）；安装回执及 bundle 存在检查通过。当前 Xcode 缺少旧版 DeveloperDiskImage，自动启动受限；用户随后明确确认能正常打开并开启画中画。
+- 根 `build.sh ios-install` 完成 iPhone 17 覆盖安装与启动；真机关于页读到 0.5（10），已观察启动 PiP、拖至右边缘和手动停止。保留实际主界面与收起截图于 `release/screenshots/0.5/iphone17/`，1206×2622 原图；商店 6.1 英寸使用原尺寸，6.5 英寸等比放大并仅补齐两侧边缘至 1284×2778，没有拉伸或合成界面。
+- 根 `build.sh appstore-archive` 四组测试、并发电量覆盖检查、媒体解码检查、归档与签名导出通过。IPA 核验：0.5（10）、MinimumOSVersion 15.0、DTXcodeBuild 27A9275、iphoneos27.1（24A94232）。构建已上传并处理为 VALID：`2e5aa600-ab00-47a2-8ced-f788a2a02fc2`。
+- 用户已确认 7 Plus 正常开启；本轮没有重新执行拔电后的完整自动锁屏计时或旧系统动态字体操作回归。手机测试服务已停止；其运行期间不能用于证明系统自动锁屏行为。
+- 远端 147 地区可用，排除 CHN 与欧盟 27 国，不自动增加新地区；Edge 确认隐私已发布。旧 0.4.0（8）审核已撤回，原版本记录改为 0.5，审核说明增加旧系统手动入口说明。两组截图各两张已全部 COMPLETE 且顺序正确；提审校验零阻断。
+- 0.5（10）于 `2026-10-31T00:50:50.161Z` 提交审核，submission `0fd37d5d-3571-4de5-8c67-44ff712a7e20`，Apple 回读 `WAITING_FOR_REVIEW`。证据：`release/evidence/submission-0.5-10.json`、`validation-0.5-10.json`、`screenshots-0.5-10.json`。未宣称审核通过或已上架。
+
+## 画中画闪电清晰度调整（本地开发版，尚未上传）
+
+- 媒体生成器使用与主界面相同的 `bolt.fill` / semibold 系统图标，替换手工折线和尖角描边；高分辨率图标遮罩经高质量缩放绘制，H.264 目标码率由 3 Mbps 提升至 6 Mbps。
+- 根据旧 Release 视频实际像素外框保留大小与位置（包含原描边）：原外框 131×231 像素，新解码帧自检允许抗锯齿/压缩导致的 2 像素偏差。视频仍为 960×540、60fps、6 秒；保留从下向上填充动画和电量叠加布局。
+- Xcode 27.1 通过根 `build.sh ios-install` 完成测试、媒体帧数/顺序/填充/尺寸检查、签名构建、iPhone 17 覆盖安装和启动。已检查解码预览 `release/evidence/pip-rounded-lightning.png`。
+- 本轮未实际观察系统 PiP 窗口缩放后的清晰度，需用户在手机上确认；没有替换商店中已提交的构建或进行完整锁屏回归。
+
 ## 提审后的本地界面调整（尚未上传）
 
 - 隐私政策与使用条款共用阅读页增加章节字重、行距、段落间距和可读宽度；支持实时字体大小变化及链接识别，法律正文未删改。
@@ -58,3 +82,15 @@
 - PiP 充电动画防锁屏仍存在 2.5.4 / 4.2 审核风险；效果随系统状态而变，无法自动把 PiP 收到屏幕边缘。
 - Cloudflare 全球托管不等于大陆备案或境内存储；未在多家中国大陆运营商网络验收。跨境数据处理仍需按实际主体完成合规核验。
 - 已保存网页和隐私发布截图于 `release/evidence/`；使用说明和密钥管理详见 `release/README.md`。
+
+## 七语言与英文上架素材（0.5 / 11，2026-10-31）
+
+- `DEVELOPER_DIR=/Applications/Xcode-27.1.app/Contents/Developer ./build.sh simulator`、`ios-install 00008150-0018398021EB401C B3ZTS6G82B`、`appstore-archive` 均通过，所有原有策略 / 电量 / 应用信息 / 诊断测试继续通过。
+- 新增 `Tests/localization.swift`：七语言三张字符串表的 key 完整性、非空、格式参数及快捷短语校验，Bundle 本地化读取，fr-CA / es-MX / ja-JP 匹配，以及 ru / ar 回退英文。137 个 UI 调用 key 均存在；每份 Localizable 共 139 条。
+- 模拟器英语 / 德语 / 日语指南无可见截断；俄语启动显示完整英文。iPhone 17 自动使用系统中文，临时英文启动首页与画中画全部英文，运行状态、电量、停止提示已验证。停止测试后恢复正常无语言覆盖启动。
+- 英文真机三张原图经 sips 等比缩放与补边形成三种尺寸素材；`asc screenshots validate` 三个尺寸组均 3/3 ready、零错误与警告。原图及上传图保留在 release/screenshots/0.5 下。
+- 本轮没有重复完整拔电自动锁屏、所有旧机型、多语言 VoiceOver 及七语言母语审校。线上反馈未发送测试报告；诊断字段和上传同意行为未改变。外部官网仍为简体中文。
+
+- Apple 回读：七个商店 locale，45 张英文截图 COMPLETE 且 MD5 与本地对应；无遗留中文截图。0.5（11）构建 VALID 并已关联；`asc validate --ipa` errors=0、blocking=0，只有七条首发 whatsNew 警告。隐私页已发布，销售范围 147 地区、CHN/EU27 关闭、手动发布均已核实。
+
+- 2026-10-31 09:50（Asia/Shanghai）提交成功：submission `13b5dd25-a0a8-4f26-ba43-232a87d0f0ac`；回执位于 `release/evidence/review-submit-0.5-11.json` 和 `submission-0.5-11.json`。
