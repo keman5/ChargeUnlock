@@ -51,6 +51,12 @@ final class AboutViewController: UITableViewController {
         tableView.sectionHeaderHeight = UITableView.automaticDimension
     }
 
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        let inset = max(20, (view.safeAreaLayoutGuide.layoutFrame.width - 375) / 2)
+        tableView.directionalLayoutMargins = NSDirectionalEdgeInsets(top: 0, leading: inset, bottom: 0, trailing: inset)
+    }
+
     override func numberOfSections(in tableView: UITableView) -> Int { sections.count }
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int { sections[section].count }
     override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
@@ -137,9 +143,13 @@ final class InformationTextViewController: UIViewController {
         renderText()
         textView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(textView)
+        let preferredWidth = textView.widthAnchor.constraint(equalTo: view.readableContentGuide.widthAnchor)
+        preferredWidth.priority = .defaultHigh
         NSLayoutConstraint.activate([
-            textView.leadingAnchor.constraint(equalTo: view.readableContentGuide.leadingAnchor),
-            textView.trailingAnchor.constraint(equalTo: view.readableContentGuide.trailingAnchor),
+            preferredWidth,
+            textView.centerXAnchor.constraint(equalTo: view.readableContentGuide.centerXAnchor),
+            textView.widthAnchor.constraint(lessThanOrEqualTo: view.readableContentGuide.widthAnchor),
+            textView.widthAnchor.constraint(lessThanOrEqualToConstant: 375),
             textView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             textView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
         ])

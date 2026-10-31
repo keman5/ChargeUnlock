@@ -54,8 +54,13 @@ final class MainViewController: UIViewController {
         let scroll = UIScrollView()
         scroll.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(scroll)
+        let preferredWidth = scroll.widthAnchor.constraint(equalTo: view.safeAreaLayoutGuide.widthAnchor)
+        preferredWidth.priority = .defaultHigh
         NSLayoutConstraint.activate([
-            scroll.leadingAnchor.constraint(equalTo: view.leadingAnchor), scroll.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            scroll.centerXAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerXAnchor),
+            scroll.widthAnchor.constraint(lessThanOrEqualTo: view.safeAreaLayoutGuide.widthAnchor),
+            scroll.widthAnchor.constraint(lessThanOrEqualToConstant: 375 + 48),
+            preferredWidth,
             scroll.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor), scroll.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
         ])
         let stack = UIStackView()

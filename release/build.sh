@@ -46,6 +46,35 @@ elif [[ "$MODE" == appstore-screenshots ]]; then
   for PAGE in guide feedback about; do
     sips -s format jpeg -s formatOptions 95 "$SHOTS/$PAGE.png" --out "$ROOT/release/screenshots/$VERSION/upload/en-US/$PAGE.jpg" >/dev/null
   done
+elif [[ "$MODE" == appstore-duo-screenshots ]]; then
+  SIMULATOR="${2:?simulator UDID required}"
+  DISPLAY="${3:?display ID required}"
+  FORM="${4:?outer or inner required}"
+  [[ "$FORM" == outer || "$FORM" == inner ]] || { echo 'Expected outer or inner'; exit 2; }
+  xcrun simctl status_bar "$SIMULATOR" override --time '9:41' --dataNetwork wifi --wifiMode active --wifiBars 3 --batteryState charged --batteryLevel 100
+  trap 'xcrun simctl status_bar "$SIMULATOR" clear; kill "$AWAKE_PID" 2>/dev/null || true' EXIT
+  for LOCALE in en-US zh-Hans; do
+    LANGUAGE=en
+    if [[ "$LOCALE" == zh-Hans ]]; then LANGUAGE=zh-Hans; fi
+    SHOTS="$ROOT/release/screenshots/$VERSION/duo/$LOCALE/$FORM"
+    mkdir -p "$SHOTS"
+    for PAGE in guide feedback about; do
+      xcrun simctl terminate "$SIMULATOR" local.chargeunlock.ios || true
+      xcrun simctl launch "$SIMULATOR" local.chargeunlock.ios -AppleLanguages "($LANGUAGE)" -AppleLocale "$LOCALE" -pluglitGuideSeen YES --preview-page "$PAGE"
+      sleep 6
+      xcrun simctl io "$SIMULATOR" screenshot --display="$DISPLAY" --type=jpeg "$SHOTS/$PAGE.jpg"
+      python3 - "$SHOTS/$PAGE.jpg" "$FORM" <<'PY'
+import subprocess, sys
+output = subprocess.check_output(['sips', '-g', 'pixelWidth', '-g', 'pixelHeight', '-g', 'hasAlpha', sys.argv[1]], text=True)
+fields = dict(line.strip().split(': ', 1) for line in output.splitlines()[1:] if ': ' in line)
+size = sorted([int(fields['pixelWidth']), int(fields['pixelHeight'])])
+expected = [1398, 2034] if sys.argv[2] == 'outer' else [2007, 2853]
+assert size == expected, (size, expected)
+assert fields['hasAlpha'] == 'no', 'Screenshot must be opaque'
+print('PASS: native Duo dimensions and no alpha:', sys.argv[1])
+PY
+    done
+  done
 elif [[ "$MODE" == appstore-shot-assets ]]; then
   SOURCE="$ROOT/release/screenshots/$VERSION/en-US-device"
   for TYPE in IPHONE_61 IPHONE_65 IPHONE_69; do
@@ -78,5 +107,5 @@ elif [[ "$MODE" == appstore-upload ]]; then
   asc publish appstore --app "$APP_ID" --ipa "$CACHE/PlugLit.ipa" --version "$VERSION" --dry-run --output table
   asc publish appstore --app "$APP_ID" --ipa "$CACHE/PlugLit.ipa" --version "$VERSION" --wait --confirm
 else
-  echo 'Usage: release/build.sh [appstore-check|appstore-archive|appstore-upload|appstore-screenshots UDID|appstore-shot-assets|appstore-shot-upload]' >&2; exit 2
+  echo 'Usage: release/build.sh [appstore-check|appstore-archive|appstore-upload|appstore-screenshots UDID|appstore-duo-screenshots UDID DISPLAY outer-or-inner|appstore-shot-assets|appstore-shot-upload]' >&2; exit 2
 fi

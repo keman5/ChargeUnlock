@@ -1,5 +1,18 @@
 # 电亮 PlugLit 发布
 
+## 副标题与功能定位待同步（2026-10-31）
+
+- 本地英文副标题改为 `Stay Awake While Charging`（25 字符），中文改为 `充电防止自动锁屏，断电恢复原设置`（16 字符）。中英文 0.5 介绍首段及推广文案突出充电常亮、拔电后沿用原有自动锁定设置，保留实际 PiP 机制、快捷指令配置和系统限制说明。
+- `asc metadata validate` 零错误、零警告；远端 dry-run 仅计划更新两语言的副标题、介绍及推广文案，共六字段，无新增或删除。
+- 当前 submission `e5abde5c-0b04-4eca-a155-9a72a110d967` 回读仍为 `WAITING_FOR_REVIEW`。本轮未撤回审核、未写入远端；若现在同步锁定的副标题，需要撤回后修改并重新提交。
+
+## iOS 27.1 运行时及 Duo 本地截图准备完成（2026-10-31 下午）
+
+- 改用 Apple 官方 CDN 直链后，7.85 GB 运行时在 4 分 57 秒下载完；长度和 Apple 目录 SHA-256 通过，CoreSimulator 确认 iOS 27.1 `24A94425` 为 `Ready / Verified`。全局 Xcode 保持不变。重现入口：`./build.sh simulator-runtime-direct`。
+- 新建 PlugLit-Duo，根脚本测试、模拟器构建与安装通过。实测展开后系统侧栏遮挡首页指南按钮，已将主页/指南/反馈横向布局约束改为安全区，重建后截图确认按钮恢复可见。
+- 中英文内外屏原生截图共 12 张已保存在 `release/screenshots/0.5/duo/`：内屏 2853×2007、外屏 1398×2034，JPEG 无透明，四组 ASC 本地校验零错误和警告，逐张目视检查完成。尚未上传。详情与前后对照见 `release/evidence/iphone-duo-readiness.md`。
+- 用户解锁后已完成合拢/半展开/展开、反馈键盘避让和折回输入保留；德语 accessibility-medium 大字指南换行、滚动及内外屏切换已检查，字号恢复 large。本地安全区修复未进入已提交的 0.5（11）构建，未撤回审核或修改远端截图及销售范围。Duo 真机 PiP 尚未验证，内屏候选图背景保留模拟器不支持 PiP 的真实提示。
+
 ## 商店介绍仅保留中英文（2026-10-31 10:04，Asia/Shanghai）
 
 - 用户要求商店介绍只保留简体中文和英文。等待审核时 Apple 禁止修改；撤回 submission `13b5dd25-a0a8-4f26-ba43-232a87d0f0ac` 后，成功删除 de-DE、es-ES、fr-FR、ja、ko 的 app-info 本地化并级联移除版本本地化。

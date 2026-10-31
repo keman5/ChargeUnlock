@@ -23,8 +23,13 @@ final class FeedbackViewController: UIViewController {
         stack.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(scroll)
         scroll.addSubview(stack)
+        let preferredWidth = scroll.widthAnchor.constraint(equalTo: view.safeAreaLayoutGuide.widthAnchor)
+        preferredWidth.priority = .defaultHigh
         NSLayoutConstraint.activate([
-            scroll.leadingAnchor.constraint(equalTo: view.leadingAnchor), scroll.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            preferredWidth,
+            scroll.centerXAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerXAnchor),
+            scroll.widthAnchor.constraint(lessThanOrEqualTo: view.safeAreaLayoutGuide.widthAnchor),
+            scroll.widthAnchor.constraint(lessThanOrEqualToConstant: 375 + 40),
             scroll.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor), scroll.bottomAnchor.constraint(equalTo: view.keyboardLayoutGuide.topAnchor),
             stack.leadingAnchor.constraint(equalTo: scroll.contentLayoutGuide.leadingAnchor, constant: 20),
             stack.trailingAnchor.constraint(equalTo: scroll.contentLayoutGuide.trailingAnchor, constant: -20),

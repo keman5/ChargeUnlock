@@ -20,6 +20,16 @@ clear_caches() {
   rm -rf "$ROOT/.artifacts"
 }
 case "$MODE" in
+ simulator-runtime-direct)
+  export DEVELOPER_DIR="/Applications/Xcode-27.1.app/Contents/Developer"
+  clear_caches
+  run_child /bin/bash "$ROOT/release/runtime/build.sh"
+  ;;
+ simulator-runtime-install)
+  export DEVELOPER_DIR="/Applications/Xcode-27.1.app/Contents/Developer"
+  run_child xcodebuild -downloadPlatform iOS -buildVersion 27.1 -architectureVariant arm64
+  xcrun simctl list runtimes -j | python3 -c 'import json,sys; r=json.load(sys.stdin)["runtimes"]; assert any(x["version"] == "27.1" and x["isAvailable"] for x in r), "iOS 27.1 runtime is not available"; print("PASS: iOS 27.1 runtime installed and available")'
+  ;;
  xcode-install)
   "$ROOT/release/xcode/build.sh" "${2:?path to completed Xcode 27.1 xip required}"
   ;;
@@ -82,8 +92,8 @@ case "$MODE" in
   clear_caches
   "$ROOT/website/build.sh" "${MODE#website}"
   ;;
- appstore-check|appstore-archive|appstore-upload|appstore-screenshots|appstore-shot-assets|appstore-shot-upload)
+ appstore-check|appstore-archive|appstore-upload|appstore-screenshots|appstore-duo-screenshots|appstore-shot-assets|appstore-shot-upload)
   "$ROOT/release/build.sh" "$@"
   ;;
- *) echo 'Usage: ./build.sh [test|simulator|simulator-install UDID|ios DEVICE TEAM|ios-install DEVICE TEAM|ios-legacy-install DEVICE TEAM|feedback-network-check|website|website-deploy|appstore-check|appstore-archive|appstore-upload|appstore-screenshots UDID|appstore-shot-assets|appstore-shot-upload|xcode-install XIP_PATH]' >&2; exit 2 ;;
+ *) echo 'Usage: ./build.sh [test|simulator|simulator-install UDID|simulator-runtime-install|simulator-runtime-direct|ios DEVICE TEAM|ios-install DEVICE TEAM|ios-legacy-install DEVICE TEAM|feedback-network-check|website|website-deploy|appstore-check|appstore-archive|appstore-upload|appstore-screenshots UDID|appstore-duo-screenshots UDID DISPLAY outer-or-inner|appstore-shot-assets|appstore-shot-upload|xcode-install XIP_PATH]' >&2; exit 2 ;;
 esac

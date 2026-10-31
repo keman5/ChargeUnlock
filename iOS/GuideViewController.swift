@@ -63,13 +63,17 @@ final class GuideViewController: UIViewController {
         stack.spacing = 16
         stack.translatesAutoresizingMaskIntoConstraints = false
         scroll.addSubview(stack)
+        let preferredWidth = scroll.widthAnchor.constraint(equalTo: view.safeAreaLayoutGuide.widthAnchor)
+        preferredWidth.priority = .defaultHigh
         NSLayoutConstraint.activate([
+            preferredWidth,
             scroll.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            scroll.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            scroll.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            scroll.centerXAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerXAnchor),
+            scroll.widthAnchor.constraint(lessThanOrEqualTo: view.safeAreaLayoutGuide.widthAnchor),
+            scroll.widthAnchor.constraint(lessThanOrEqualToConstant: 375 + 40),
             scroll.bottomAnchor.constraint(equalTo: shortcuts.topAnchor, constant: -12),
-            shortcuts.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            shortcuts.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            shortcuts.leadingAnchor.constraint(equalTo: scroll.leadingAnchor, constant: 20),
+            shortcuts.trailingAnchor.constraint(equalTo: scroll.trailingAnchor, constant: -20),
             shortcuts.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -12),
             shortcuts.heightAnchor.constraint(greaterThanOrEqualToConstant: 50),
             stack.leadingAnchor.constraint(equalTo: scroll.contentLayoutGuide.leadingAnchor, constant: 20),
